@@ -9,7 +9,7 @@ To build this project, you will need to use GitHub's NodeJS Package Manager (npm
 
 The NodeJS Package Manager, which is the world's largest software registry and supports over one million open source JavaScript packages and libraries, runs in a NodeJS runtime. The NodeJS runtime is essentially a port of Google Chrome's JavaScript V8 engine that will run directly in your terminal (instead of within a browser).
 
-Before you begin, you will need to install [NodeJS and npm](https://www.npmjs.com/get-npm). Then, open a new terminal instance, set your working directory to the root of the project, and run `npm install`.
+Before you begin, you will need to install [NodeJS and npm](https://www.npmjs.com/get-npm). Then, open a new terminal instance, set your working directory to the root of the project, and run `npm install`. This makes npm reads the package.json file in the project's root directory, which lists the dependencies required by the project. npm then installs those dependencies in a node_modules folder within the project directory.
 
 ## Setting Up Your Project
 Before you start your project, look inside `package.json`. Take a note of the following fields, and adjust them where appropriate:

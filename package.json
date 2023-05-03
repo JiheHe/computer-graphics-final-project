@@ -1,9 +1,9 @@
 {
-  "name": "lower-case-dashed-name-of-project",
-  "repository": "REPOSITORY-NAME-AS-IT-APPEARS-IN-GITHUB-URL",
+  "name": "escape-the-tsunami-3d",
+  "repository": "computer-graphics-final-project",
   "version": "0.1.0",
-  "title": "PROJECT TITLE HERE",
-  "description": "SHORT DESCRIPTION OF PROJECT HERE. ONE TO TWO SENTENCES MAX",
+  "title": "Escape The Tsunami 3D",
+  "description": "A nifty game where the user must survive twenty rounds of the worst that nature can produce.",
   "keywords": [
     "graphics",
     "three.js",
