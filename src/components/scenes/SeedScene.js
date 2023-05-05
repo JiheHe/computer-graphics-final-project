@@ -14,7 +14,9 @@ class SeedScene extends Scene {
             gui: new Dat.GUI(), // Create GUI for scene
             rotationSpeed: 1,
             updateList: [],
-            world: new CANNON.World(), // Add a new Cannon.js world (for the physics engine calculation)
+            world: new CANNON.World( { // Add a new Cannon.js world (for the physics engine calculation). Can use set function to change parameters at run time.
+                gravity: new CANNON.Vec3(0, -9.81, 0), // gravity is set in the Y directionly only right now. // UNCOMMENT ME WHEN COLLISION IS READY
+            } ), 
             keys: {}, // Add user keypress input
         };
 
@@ -25,11 +27,11 @@ class SeedScene extends Scene {
         this.background = new Color(0x7ec0ee);
 
         // Add meshes to scene
-        const land = new Land();
-        const flower = new Flower(this);
+        const land = new Land(this);
+        // const flower = new Flower(this);
         const player = new Player(this);
         const lights = new BasicLights();
-        this.add(land, flower, player, lights);
+        this.add(land, player, lights);
 
         // Populate GUI
         this.state.gui.add(this.state, 'rotationSpeed', -5, 5);

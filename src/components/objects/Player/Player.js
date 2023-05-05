@@ -3,6 +3,31 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
 import MODEL from './player.gltf';
 
+import { CylinderGeometry, MeshBasicMaterial, Mesh, DoubleSide } from 'three';
+
+function createCylinderColliderMesh(playerBody) { // A helper function for visualizing a cylindrical collider
+    const cylinderShape = playerBody.shapes[0];
+    const geometry = new CylinderGeometry(
+        cylinderShape.radiusTop,
+        cylinderShape.radiusBottom,
+        cylinderShape.height,
+        cylinderShape.numSegments
+    );
+
+    const material = new MeshBasicMaterial({
+        color: 0x0000ff,
+        transparent: false,
+        opacity: 0.5,
+        // side: DoubleSide,
+    });
+
+    const mesh = new Mesh(geometry, material);
+    mesh.position.copy(playerBody.position);
+    mesh.quaternion.copy(playerBody.quaternion);
+
+    return mesh;
+}
+
 // IMPORTANT: the player movement is fully simulated by Cannon.JS's physics engine, NOT using TWEEN. 
 
 class Player extends Group {
@@ -13,8 +38,10 @@ class Player extends Group {
         // Init state, variable specific to this object. (TODO: tune them later)
         this.state = {
             gui: parent.state.gui, // gui, useless at the moment. Can be used in the future for parameter tuning, or delete.
-            moveSpeed: 5, // move speed of the player
-            jumpHeight: 1, // jump height of the player
+            moveSpeed: 10, // move speed of the player
+            jumpHeight: 500, // jump height of the player
+            isGrounded: false, // checks whether the character is on the ground.
+            colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
         };
 
         // Load object
@@ -28,6 +55,10 @@ class Player extends Group {
         // Initialize physical properties of the object
         this.initPhysics(parent);
 
+        // Update Three.js object position to match Cannon.js body position (Two different systems)
+        this.position.copy(this.body.position);
+        this.position.add(this.state.colliderOffset);
+
         // Add self to parent's update list
         parent.addToUpdateList(this);
     }
@@ -35,19 +66,31 @@ class Player extends Group {
     initPhysics(parent) { // Initialize physical properties of the object (TODO: tune them later)
         // Set up Cannon.js physics
         this.body = new CANNON.Body({
-            mass: 1, // The mass of the object
+            mass: 70, // The mass of the object in kg, this is the mass of standard human male
             shape: new CANNON.Cylinder(0.5, 0.5, 2, 16), // The shape of the object's collision volume
             material: new CANNON.Material( // The material properties of the object
-                { friction: 0.5, // how much object slides
-                restitution: 0 }), // how much object bounces on contact
+                { friction: 0.05, // how much object slides 
+                restitution: 0.1 }), // how much object bounces on contact 
             linearDamping: 0.8, // A factor that reduces the object's linear velocity over time, simulating friction or air resistence.
             fixedRotation: true, // When true, disables forced rotation due to collision
             position: new CANNON.Vec3(0, 1, 0), // The starting position of the object in the physics world.
         });
         this.body.updateMassProperties(); // Need to call this after setting up the parameters.
+        
+        this.body.addEventListener('collide', (event) => { // subscribe to "onCollision" event // TODO: type classification later.
+            // Check if the collision normal is pointing upwards (character is on the ground)
+            if (event.contact.ni.y > 0.5) {
+                this.state.isGrounded = true;
+            }
+        });
 
         // Add body to the world (physics world)
         parent.state.world.addBody(this.body);
+
+        // for debugging: visualizing collider
+        /*this.colliderMesh = createCylinderColliderMesh(this.body);
+        this.colliderMesh.position.copy(this.body.position);
+        parent.add(this.colliderMesh);*/
     }
 
     getCameraVectors(camera) { // Returns the camera vectors via some linear algebra 
@@ -105,10 +148,16 @@ class Player extends Group {
     }
 
     jump() { // Makes the character jump parallel to Y axis via forces (what's cool is the forces in different directions are all accounted for by the engine)
+        if (!this.state.isGrounded) {
+            return; // Do not jump if the character is not grounded
+        }
+        
         const jumpForce = this.state.jumpHeight;
-
         // Apply an impulse in the Y direction
         this.body.applyImpulse(new CANNON.Vec3(0, jumpForce, 0), this.body.position);
+
+        // Set the isGrounded flag to false after jumping
+        this.state.isGrounded = false;
     }
 
     update(camera) {
@@ -128,9 +177,17 @@ class Player extends Group {
 
         // Update Three.js object position to match Cannon.js body position (Two different systems)
         this.position.copy(this.body.position);
+        this.position.add(this.state.colliderOffset);
 
         // Advance tween animations, if any exist
         // TWEEN.update(); // Just gonna keep it here as a reminder, in case needed for character animation
+
+        // For debugging, collider visualization
+        // this.colliderMesh.position.copy(this.body.position);
+
+        // Log the positions of both the Cannon.js body and the Three.js visual object
+        // console.log("Cannon.js body position:", this.body.position);
+        // console.log("Three.js visual object position:", this.position);
     }
 }
 
