@@ -1,15 +1,16 @@
-import { Group, Box3, Vector3, Face3 } from 'three';
-import { Mesh, MeshBasicMaterial, BoxGeometry, Geometry } from 'three';
+import { Group, Box3, Vector3 } from 'three';
+import { Mesh, MeshBasicMaterial, BoxGeometry } from 'three';
+// import { Face3, Geometry } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
-import SKYSCRAPER_MODEL from './skyscraper.gltf';
 import qh from 'quickhull3d'
+import SKYSCRAPER_MODEL from './skyscraper.gltf'; // import other buildling gltfs here. Make sure to follow the convention!
 
-function createConvexPolyhedronFromGeometry(geometry) {
+function createConvexPolyhedronFromGeometry(geometry, parent = null) { // a helper function that creates a cannon.js convex polyhedron for a better-fit collider
   let convexVertices = geometry.vertices;
   const options = { skipTriangulation: true };
-  let convexFaces = qh(convexVertices, options);
-  let cannonVertices = convexVertices.map((v) => new CANNON.Vec3(v[0], v[1], v[2]));
+  let convexFaces = qh(convexVertices, options); // using QuickHull to create a quick convex hull given the list of vertices without triangulation
+  let cannonVertices = convexVertices.map((v) => new CANNON.Vec3(v[0], v[1], v[2])); // convert to required datatype.
 
   // this part is to visualize, debugging only // the convex hull looks good!
   /*const convexGeometry = new Geometry();
@@ -26,10 +27,10 @@ function createConvexPolyhedronFromGeometry(geometry) {
 
   // CRINGE TOOK ME 7 HOURS ON SYNTAX BUG: {cannonVertices, convexFaces} is actually interpreted as {cannonVertices: cannonVertices, convexFaces: convexFaces}. 
   // So, the property names in the object you pass to the constructor don't match the expected vertices and faces properties.
-  return new CANNON.ConvexPolyhedron( {vertices: cannonVertices, faces: convexFaces} );
+  return new CANNON.ConvexPolyhedron( {vertices: cannonVertices, faces: convexFaces} ); // constructs the convex polyhedron
 }
 
-function extractVerticesAndFacesFromBufferGeometry(bufferGeometry) {
+function extractVerticesAndFacesFromBufferGeometry(bufferGeometry) { // given a loader buffer geometry, outputs the vertices and faces of the mesh following the convention
   // Extract the vertices first, basically the same as geometry.attributes.position.
   const vertices = []; 
   const positionAttribute = bufferGeometry.getAttribute('position');
@@ -67,13 +68,13 @@ function extractVerticesAndFacesFromBufferGeometry(bufferGeometry) {
   return { vertices, faces };
 }
 
-function mergeVerticesAndFaces(submeshes) {
+function mergeVerticesAndFaces(submeshes) { // given a list of meshes, merge all their vertices and faces together as if they are one big mesh. For convex hulling.
   let mergedVertices = [];
   let mergedFaces = [];
   let vertexOffset = 0;
 
   for (const submesh of submeshes) {
-    const info = extractVerticesAndFacesFromBufferGeometry(submesh.geometry);
+    const info = extractVerticesAndFacesFromBufferGeometry(submesh.geometry); // extract the verts and faces from the current mesh
 
     // Add vertices
     mergedVertices.push(...info.vertices);
@@ -87,7 +88,7 @@ function mergeVerticesAndFaces(submeshes) {
     vertexOffset += info.vertices.length;
   }
 
-  return { vertices: mergedVertices, faces: mergedFaces };
+  return { vertices: mergedVertices, faces: mergedFaces }; // one big list.
 }
 
 class Building extends Group {
@@ -106,20 +107,21 @@ class Building extends Group {
     this.name = name;
     this.parentObj = parent;
 
-    if (modelUrl) {
+    if (modelUrl) { // if a model is supplied
       // Load object
       const loader = new GLTFLoader();
       loader.load(modelUrl, (gltf) => {
+        // Cache each fractured piece in the file, following the convention
         this.traverseAndDefinePieces(gltf.scene.children, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
-        // Add the main piece to the scene.
-        const dimensions = this.calculateModelDimensions(gltf.scene);
-        this.initPhysics(parent, dimensions, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
-        this.add(gltf.scene);
-        this.originalObj = gltf.scene;
-        this.fractured = false;
+        // Add the main piece (0th 'earliest' piece, following the convention) to the scene.
+        // const dimensions = this.calculateModelDimensions(gltf.scene.children[0]); // just a bounding box dim, not as accurate but prob faster. Put dim back if too slow.
+        this.initPhysics(parent, null, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+        this.originalObj = gltf.scene.children[0]; // need to put it before the add, otherwise the address points to other stuff since:
+        this.add(gltf.scene.children[0]); // changes the hierarchy of the first child by moving it under the custom script; visualizes it
+        this.fractured = false; // starts off intact
 
-        // Add a collision event listener to the building's physics body
-        this.body.addEventListener("collide", this.handleCollision.bind(this)); // this.body.addEventListener("collide", (event) => {this.handleCollision(event)});
+        // Add a collision event listener to the building's MAIN physics body
+        this.body.addEventListener("collide", this.handleCollision.bind(this));
       });
     } else {
       this.initPhysics(parent, dims, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
@@ -144,7 +146,6 @@ class Building extends Group {
     const box = new Box3().setFromObject(model);
     const size = new Vector3();
     box.getSize(size);
-
     return size;
   }
 
@@ -155,12 +156,21 @@ class Building extends Group {
   // CONVENTION: if there are >1 children, then first child will ALWAYS be the full mesh, and the rest will be the fractured parts.
   // Otherwise, if there is only 1 child, then that child is the full mesh. (no fractured part). TODO: this part is not implemented yet, no need I think?
   traverseAndDefinePieces(childObjs, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
-    for (let i = 0; i < childObjs.length; i++) {
+    // Define the main piece (keeps track of all the meshes in the OG building)
+    this.mainmeshes = [];
+    childObjs[0].traverse((child) => { 
+      if (child.isMesh) {
+        this.mainmeshes.push(child);
+      }
+    });
+    // Define the fractured pieces via caching
+    for (let i = 1; i < childObjs.length; i++) {
       let childObj = childObjs[i]; // current piece.
       const submeshes = []; // meshes within this piece
       childObj.traverse((child) => { // childObj is also included in the traversal. MAYBE???
-        if (child.isMesh)
+        if (child.isMesh) {
           submeshes.push(child);
+        }
       });
       this.state.fracturedPieces.push(
         {childObj, submeshes, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
@@ -168,9 +178,14 @@ class Building extends Group {
   }
 
   initPhysics(parent, dimensions, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
-    this.shape = new CANNON.Box(new CANNON.Vec3(dimensions.x / 2, dimensions.y / 2, dimensions.z / 2));
-    this.body = new CANNON.Body({
-      mass: mass,
+    if (dimensions != null) this.shape = new CANNON.Box(new CANNON.Vec3(dimensions.x / 2, dimensions.y / 2, dimensions.z / 2)); // generating a box collider
+    else {
+      const info = mergeVerticesAndFaces(this.mainmeshes);
+      this.shape = createConvexPolyhedronFromGeometry(info); // generating a convex-hulled, shape-specific collider
+    }
+
+    this.body = new CANNON.Body({ // parameter definitions defined at the bottom of this script
+      mass: 0, // mass input parameter. Set it to 0 because a building shouldn't be moving anyway. But building mass is good for weighing the pieces individually.
       shape: this.shape,
       material: new CANNON.Material({
         friction: friction,
@@ -201,13 +216,11 @@ class Building extends Group {
     box.getSize(size);
     // Create a Cannon.js body for the object
     const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));*/
-    // const info = extractVerticesAndFacesFromBufferGeometry(object.geometry);
     const info = mergeVerticesAndFaces(submeshes);
-    const shape = createConvexPolyhedronFromGeometry(info); // object is of type "BufferedGeometry"
-    // console.log(shape);
+    const shape = createConvexPolyhedronFromGeometry(info); // object is of type "BufferedGeometry" // generating a convex-hulled, shape-specific collider
 
     const body = new CANNON.Body({
-      mass: mass,
+      mass: mass, // in the future, could be weighted by volume %
       shape: shape,
       material: new CANNON.Material({
         friction: friction,
@@ -220,35 +233,34 @@ class Building extends Group {
       collisionFilterGroup: collisionFilterGroup,
       collisionFilterMask: collisionFilterMask,
     });
+    body.updateMassProperties();
 
     // Add the Cannon.js body to the world
-    parent.state.world.addBody(body);
+    parent.state.world.addBody(body); // Need to call this after setting up the parameters.
 
     // Set the body to sleep initially, so it doesn't simulate until a collision happens
     // body.sleep();
 
-    // Store the Cannon.js body and the Three.js object for future updates
+    // Store the Cannon.js body and the Three.js object for future updates.
     this.state.fracturedPieces[index] = { body, object };
   }
 
-  handleCollision(event) {
+  handleCollision(event) { // the function executed when a collision happens between something and the main physical buildling.
     // Get the impact velocity along the normal
     const impactVelocityAlongNormal = event.contact.getImpactVelocityAlongNormal();
   
     // Calculate the impact force along the normal by multiplying the impact velocity along the normal by the mass of the colliding body
-    // assumes the collision is perfectly elastic. In reality, you might need to take into account the coefficient of restitution 
+    // assumes the collision is perfectly elastic. In reality, might need to take into account the coefficient of restitution 
     const impactForce = Math.abs(impactVelocityAlongNormal * event.contact.bj.mass);
   
     // If the impact force is above the threshold, break the building
     if (impactForce > this.state.breakThreshold) {
-      console.log("Collision happened");
+      // console.log("Collision happened");
       this.fractured = true;
     }
   }
 
   breakBuilding(parent) {
-    // Remove the unbroken building physics body from the world
-
     // Wake up and enable simulation for the fractured pieces
     // for (const piece of this.state.fracturedPieces) {
     //  piece.body.wakeUp();
@@ -261,7 +273,6 @@ class Building extends Group {
       this.initPhysicsForFracturedPiece(parent, info.childObj, info.submeshes, i, info.startingPos, info.mass, info.friction, info.restitution, 
         info.linearDamping, info.angularDamping, info.fixedRotation, info.collisionFilterGroup, info.collisionFilterMask);
       // Initialize visuals
-      // parent.add(info.childObj.parent); // why parent.add instead of this.add?
       parent.add(info.childObj); // why parent.add instead of this.add?
       // Overwrite has happened
       let piece = this.state.fracturedPieces[i];
@@ -280,7 +291,7 @@ class Building extends Group {
         this.breakBuilding(this.parentObj);
         this.originalDeleted = true;
       }
-      else {
+      else { // updated fractured pieces visual to match physical
         for (const piece of this.state.fracturedPieces) {
           piece.object.position.copy(piece.body.position);
           piece.object.quaternion.copy(piece.body.quaternion);
@@ -290,13 +301,13 @@ class Building extends Group {
     }
 
     // Update Three.js object position to match Cannon.js body position (Two different systems)
-    if (this.body) {
+    if (this.body) { // exists only if main body is there
       this.position.copy(this.body.position);
       this.position.add(this.state.colliderOffset);
       this.quaternion.copy(this.body.quaternion);
     }
 
-    if (this.mesh) {
+    if (this.mesh) { // doesn't exist, unless in visualization mode creation.
       this.mesh.position.copy(this.body.position);
       this.mesh.position.add(this.state.colliderOffset);
       this.mesh.quaternion.copy(this.body.quaternion);
@@ -322,7 +333,7 @@ class Building extends Group {
 // collisionFilterGroup - assigns an object to a specific group, usually done with bits (i.e. each bit mask is a diff group) // TODO: should probably add this property to other objects
 // collisionFilterMask - a property that defines which groups an object should collide with, bitwise OR of the groups. -1 means NONE by default.
 
-class Skyscraper extends Building {
+class Skyscraper extends Building { // An example of how to make a building type
   constructor(parent, useModel, startingPos, dimensions = new Vector3(2, 10, 2), mass = 10, friction = 1, restitution = 0,
     linearDamping = 0.9, angularDamping = 0.9, fixedRotation = false, collisionFilterGroup = -1, collisionFilterMask = -1) {
     super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, friction, restitution, 
