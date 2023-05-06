@@ -67,6 +67,29 @@ function extractVerticesAndFacesFromBufferGeometry(bufferGeometry) {
   return { vertices, faces };
 }
 
+function mergeVerticesAndFaces(submeshes) {
+  let mergedVertices = [];
+  let mergedFaces = [];
+  let vertexOffset = 0;
+
+  for (const submesh of submeshes) {
+    const info = extractVerticesAndFacesFromBufferGeometry(submesh.geometry);
+
+    // Add vertices
+    mergedVertices.push(...info.vertices);
+
+    // Add faces and update indices
+    const updatedFaces = info.faces.map(face => {
+      return face.map(index => index + vertexOffset);
+    });
+    mergedFaces.push(...updatedFaces);
+
+    vertexOffset += info.vertices.length;
+  }
+
+  return { vertices: mergedVertices, faces: mergedFaces };
+}
+
 class Building extends Group {
   constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, friction, restitution, 
     linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) { // dims is a vec3
@@ -87,13 +110,7 @@ class Building extends Group {
       // Load object
       const loader = new GLTFLoader();
       loader.load(modelUrl, (gltf) => {
-        gltf.scene.traverse((child) => {
-          if (child.isMesh) {
-            this.state.fracturedPieces.push(
-              {child, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
-          }
-        });
-
+        this.traverseAndDefinePieces(gltf.scene.children, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
         // Add the main piece to the scene.
         const dimensions = this.calculateModelDimensions(gltf.scene);
         this.initPhysics(parent, dimensions, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
@@ -131,6 +148,25 @@ class Building extends Group {
     return size;
   }
 
+  // SIMPLIFICATION: When given a gltf scene, the initial children objects ALL represent the buildling parts.
+  // within each object, we account for their collectivity by finding all the meshes in it and visualize/physicalize them as one
+  // O(n). Much faster and easier.
+  // Input: gltf.scene.children, a list of objects.
+  // CONVENTION: if there are >1 children, then first child will ALWAYS be the full mesh, and the rest will be the fractured parts.
+  // Otherwise, if there is only 1 child, then that child is the full mesh. (no fractured part). TODO: this part is not implemented yet, no need I think?
+  traverseAndDefinePieces(childObjs, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
+    for (let i = 0; i < childObjs.length; i++) {
+      let childObj = childObjs[i]; // current piece.
+      const submeshes = []; // meshes within this piece
+      childObj.traverse((child) => { // childObj is also included in the traversal. MAYBE???
+        if (child.isMesh)
+          submeshes.push(child);
+      });
+      this.state.fracturedPieces.push(
+        {childObj, submeshes, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
+    }
+  }
+
   initPhysics(parent, dimensions, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
     this.shape = new CANNON.Box(new CANNON.Vec3(dimensions.x / 2, dimensions.y / 2, dimensions.z / 2));
     this.body = new CANNON.Body({
@@ -158,14 +194,15 @@ class Building extends Group {
     this.quaternion.copy(this.body.quaternion);
   }
 
-  initPhysicsForFracturedPiece(parent, object, index, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
+  initPhysicsForFracturedPiece(parent, object, submeshes, index, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
     /*// Calculate the dimensions of the object
     const box = new Box3().setFromObject(object);
     const size = new Vector3();
     box.getSize(size);
     // Create a Cannon.js body for the object
     const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));*/
-    const info = extractVerticesAndFacesFromBufferGeometry(object.geometry);
+    // const info = extractVerticesAndFacesFromBufferGeometry(object.geometry);
+    const info = mergeVerticesAndFaces(submeshes);
     const shape = createConvexPolyhedronFromGeometry(info); // object is of type "BufferedGeometry"
     // console.log(shape);
 
@@ -221,10 +258,11 @@ class Building extends Group {
     for (let i = 0; i < this.state.fracturedPieces.length; i++) {
       // Initialize physics for the fractured piece
       let info = this.state.fracturedPieces[i];
-      this.initPhysicsForFracturedPiece(parent, info.child, i, info.startingPos, info.mass, info.friction, info.restitution, 
+      this.initPhysicsForFracturedPiece(parent, info.childObj, info.submeshes, i, info.startingPos, info.mass, info.friction, info.restitution, 
         info.linearDamping, info.angularDamping, info.fixedRotation, info.collisionFilterGroup, info.collisionFilterMask);
       // Initialize visuals
-      parent.add(info.child.parent); // why parent.add instead of this.add?
+      // parent.add(info.childObj.parent); // why parent.add instead of this.add?
+      parent.add(info.childObj); // why parent.add instead of this.add?
       // Overwrite has happened
       let piece = this.state.fracturedPieces[i];
       piece.object.position.copy(piece.body.position);
