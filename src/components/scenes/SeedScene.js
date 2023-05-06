@@ -1,6 +1,7 @@
 import * as Dat from 'dat.gui';
 import { Scene, Color } from 'three';
-import { Flower, Land, Player } from 'objects';
+import { Land, Player } from 'objects';
+import { Skyscraper } from 'objects';
 import { BasicLights } from 'lights';
 import * as CANNON from 'cannon-es'; // aliasing
 
@@ -28,10 +29,10 @@ class SeedScene extends Scene {
 
         // Add meshes to scene
         const land = new Land(this);
-        // const flower = new Flower(this);
         const player = new Player(this);
         const lights = new BasicLights();
-        this.add(land, player, lights);
+        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(5, 10, 5));
+        this.add(simpleBuilding, land, player, lights);
 
         // Populate GUI
         this.state.gui.add(this.state, 'rotationSpeed', -5, 5);

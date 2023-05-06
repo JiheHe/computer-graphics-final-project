@@ -48,7 +48,7 @@ class Player extends Group {
         const loader = new GLTFLoader();
 
         this.name = 'player';
-            loader.load(MODEL, (gltf) => {
+        loader.load(MODEL, (gltf) => {
             this.add(gltf.scene);
         });
 
