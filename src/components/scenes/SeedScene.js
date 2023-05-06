@@ -31,7 +31,7 @@ class SeedScene extends Scene {
         const land = new Land(this);
         const player = new Player(this);
         const lights = new BasicLights();
-        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(5, 10, 5));
+        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0));
         this.add(simpleBuilding, land, player, lights);
 
         // Populate GUI

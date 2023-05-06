@@ -73,7 +73,7 @@ class Player extends Group {
                 restitution: 0.1 }), // how much object bounces on contact 
             linearDamping: 0.8, // A factor that reduces the object's linear velocity over time, simulating friction or air resistence.
             fixedRotation: true, // When true, disables forced rotation due to collision
-            position: new CANNON.Vec3(0, 1, 0), // The starting position of the object in the physics world.
+            position: new CANNON.Vec3(5, 1, 5), // The starting position of the object in the physics world.
         });
         this.body.updateMassProperties(); // Need to call this after setting up the parameters.
         
