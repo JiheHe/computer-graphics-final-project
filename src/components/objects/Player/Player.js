@@ -31,7 +31,7 @@ function createCylinderColliderMesh(playerBody) { // A helper function for visua
 // IMPORTANT: the player movement is fully simulated by Cannon.JS's physics engine, NOT using TWEEN. 
 
 class Player extends Group {
-    constructor(parent, startingPos) {
+    constructor(parent, startingPos, material) {
         // Call parent Group() constructor
         super();
 
@@ -53,7 +53,7 @@ class Player extends Group {
         });
 
         // Initialize physical properties of the object
-        this.initPhysics(parent, startingPos);
+        this.initPhysics(parent, startingPos, material);
 
         // Update Three.js object position to match Cannon.js body position (Two different systems)
         this.position.copy(this.body.position);
@@ -63,15 +63,13 @@ class Player extends Group {
         parent.addToUpdateList(this);
     }
 
-    initPhysics(parent, startingPos) { // Initialize physical properties of the object (TODO: tune them later)
+    initPhysics(parent, startingPos, material) { // Initialize physical properties of the object (TODO: tune them later)
         // Set up Cannon.js physics
         this.body = new CANNON.Body({
             mass: 70, // The mass of the object in kg, this is the mass of standard human male
             shape: new CANNON.Cylinder(0.5, 0.5, 2, 16), // The shape of the object's collision volume
-            material: new CANNON.Material( // The material properties of the object
-                { friction: 0.05, // how much object slides 
-                restitution: 0.1 }), // how much object bounces on contact 
-            linearDamping: 0.8, // A factor that reduces the object's linear velocity over time, simulating friction or air resistence.
+            material: material,
+            linearDamping: 0.4, // A factor that reduces the object's linear velocity over time, simulating friction or air resistence.
             fixedRotation: true, // When true, disables forced rotation due to collision
             position: startingPos, // The starting position of the object in the physics world.
         });

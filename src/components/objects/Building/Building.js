@@ -92,7 +92,7 @@ function mergeVerticesAndFaces(submeshes) { // given a list of meshes, merge all
 }
 
 class Building extends Group {
-  constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, friction, restitution, 
+  constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, material, 
     linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) { // dims is a vec3
     // Call parent Group() constructor
     super();
@@ -100,7 +100,7 @@ class Building extends Group {
     // Init state, variable specific to this object. (TODO: tune them later)
     this.state = {
       colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
-      breakThreshold: 100, // Set the force threshold for breaking the building
+      breakThreshold: 1000, // Set the force threshold for breaking the building
       fracturedPieces: [], // Store fractured pieces' physics bodies and objects
     }
 
@@ -112,10 +112,10 @@ class Building extends Group {
       const loader = new GLTFLoader();
       loader.load(modelUrl, (gltf) => {
         // Cache each fractured piece in the file, following the convention
-        this.traverseAndDefinePieces(gltf.scene.children, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+        this.traverseAndDefinePieces(gltf.scene.children, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
         // Add the main piece (0th 'earliest' piece, following the convention) to the scene.
         // const dimensions = this.calculateModelDimensions(gltf.scene.children[0]); // just a bounding box dim, not as accurate but prob faster. Put dim back if too slow.
-        this.initPhysics(parent, null, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+        this.initPhysics(parent, null, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
         this.originalObj = gltf.scene.children[0]; // need to put it before the add, otherwise the address points to other stuff since:
         this.add(gltf.scene.children[0]); // changes the hierarchy of the first child by moving it under the custom script; visualizes it
         this.fractured = false; // starts off intact
@@ -124,7 +124,7 @@ class Building extends Group {
         this.body.addEventListener("collide", this.handleCollision.bind(this));
       });
     } else {
-      this.initPhysics(parent, dims, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+      this.initPhysics(parent, dims, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
 
       // visualizing the custom shape
       const geometry = new BoxGeometry(dims.x, dims.y, dims.z);
@@ -155,7 +155,7 @@ class Building extends Group {
   // Input: gltf.scene.children, a list of objects.
   // CONVENTION: if there are >1 children, then first child will ALWAYS be the full mesh, and the rest will be the fractured parts.
   // Otherwise, if there is only 1 child, then that child is the full mesh. (no fractured part). TODO: this part is not implemented yet, no need I think?
-  traverseAndDefinePieces(childObjs, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
+  traverseAndDefinePieces(childObjs, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
     // Define the main piece (keeps track of all the meshes in the OG building)
     this.mainmeshes = [];
     childObjs[0].traverse((child) => { 
@@ -173,11 +173,11 @@ class Building extends Group {
         }
       });
       this.state.fracturedPieces.push(
-        {childObj, submeshes, startingPos, mass: 0, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
+        {childObj, submeshes, startingPos, mass: 0, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
     }
   }
 
-  initPhysics(parent, dimensions, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
+  initPhysics(parent, dimensions, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
     if (dimensions != null) this.shape = new CANNON.Box(new CANNON.Vec3(dimensions.x / 2, dimensions.y / 2, dimensions.z / 2)); // generating a box collider
     else {
       const info = mergeVerticesAndFaces(this.mainmeshes);
@@ -187,10 +187,7 @@ class Building extends Group {
     this.body = new CANNON.Body({ // parameter definitions defined at the bottom of this script
       mass: 0, // mass input parameter. Set it to 0 because a building shouldn't be moving anyway.
       shape: this.shape,
-      material: new CANNON.Material({
-        friction: friction,
-        restitution: restitution,
-      }),
+      material: material,
       position: startingPos,
       linearDamping: linearDamping,
       angularDamping: angularDamping,
@@ -222,7 +219,7 @@ class Building extends Group {
     return { shape, volume };
   }
 
-  initPhysicsForFracturedPiece(parent, object, shape, volume, index, startingPos, additionalMass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
+  initPhysicsForFracturedPiece(parent, object, shape, volume, index, startingPos, additionalMass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
     /*// Calculate the dimensions of the object
     const box = new Box3().setFromObject(object);
     const size = new Vector3();
@@ -236,10 +233,7 @@ class Building extends Group {
     const body = new CANNON.Body({
       mass: newMass, // the weighted mass.
       shape: shape,
-      material: new CANNON.Material({
-        friction: friction,
-        restitution: restitution,
-      }),
+      material: material,
       position: new Vector3().copy(object.position).add(startingPos), // object.position.add(startingPos), either one works
       linearDamping: linearDamping,
       angularDamping: angularDamping,
@@ -290,7 +284,7 @@ class Building extends Group {
     for (let i = 0; i < this.state.fracturedPieces.length; i++) {
       // Initialize physics for the fractured piece
       let info = this.state.fracturedPieces[i];
-      this.initPhysicsForFracturedPiece(parent, info.childObj, shapeAndVolumeCache[i].shape, shapeAndVolumeCache[i].volume, i, info.startingPos, info.mass, info.friction, info.restitution, 
+      this.initPhysicsForFracturedPiece(parent, info.childObj, shapeAndVolumeCache[i].shape, shapeAndVolumeCache[i].volume, i, info.startingPos, info.mass, info.material, 
         info.linearDamping, info.angularDamping, info.fixedRotation, info.collisionFilterGroup, info.collisionFilterMask);
       // Initialize visuals
       parent.add(info.childObj); // why parent.add instead of this.add?
@@ -340,7 +334,7 @@ class Building extends Group {
 // Default parameters are used for artistic visualization of building looks and placements
 // Want to use an actual polished modelUrl model in official release.
 
-// param: parent, modelUrl = null, dims = null, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask, name
+// param: parent, modelUrl = null, dims = null, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask, name
 // model url - path to the gltf file. Use useModel to decide whether to use model or not.
 // dims - vector3 object stating the size dim of the shape (obselete in the presence of a model url, used for quick visualization to help modeling)
 // startingPos - Cannon.Vec3 object stating the starting position of the shape
@@ -354,9 +348,10 @@ class Building extends Group {
 // collisionFilterMask - a property that defines which groups an object should collide with, bitwise OR of the groups. -1 means NONE by default.
 
 class Skyscraper extends Building { // An example of how to make a building type
-  constructor(parent, useModel, startingPos, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 10, friction = 1, restitution = 0,
-    linearDamping = 0.9, angularDamping = 0.9, fixedRotation = false, collisionFilterGroup = -1, collisionFilterMask = -1) {
-    super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, friction, restitution, 
+  constructor(parent, useModel, startingPos, buildingMaterial, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 100,
+    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false, collisionFilterGroup = -1, collisionFilterMask = -1) {
+
+    super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, buildingMaterial, 
       linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
   }
 }

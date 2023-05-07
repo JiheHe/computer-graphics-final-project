@@ -137,13 +137,22 @@ class GameScene extends Scene {
         // Set background to a nice color
         this.background = new Color(0x7ec0ee);
 
+        // Create all the materials. // The material properties of the object: {how much object slides, how much object bounces on contact} 
+        let characterMaterial = new CANNON.Material({ friction: 0.001, restitution: 0.3 }); 
+        let landMaterial = new CANNON.Material({friction: 0.6, restitution: 0.2 }); 
+        let skyscraperMaterial = new CANNON.Material({friction: 1, restitution: 0.1}); 
+
+        // Create contact materials, i.e. a way to define the interaction properties between two materials when they come into contact. Same param.
+        // const characterBuildingContactMaterial = new CANNON.ContactMaterial(characterMaterial, skyscraperMaterial, {friction: 0.5, restitution: 0.6});
+        // this.state.world.addContactMaterial(characterBuildingContactMaterial);  // doesn't feel the effect for this one rn...
+
         // Add meshes to scene
-        const land = new Land(this, new CANNON.Vec3(0, 0, 0)); // the floor; can specify its starting position
-        const player = new Player(this, new CANNON.Vec3(5, 1, 5)); // the player; can specify its starting position
+        const player = new Player(this, new CANNON.Vec3(5, 1, 5), characterMaterial); // the player; can specify its starting position
+        const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial); // the floor; can specify its starting position
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
-        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0)); // an example of actual building
-        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5)); // an example of size/loc visualization
-        // this.currentSceneObjects = [simpleBuilding, land, player, lights, buildingVisualization];
+        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
+        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
+
         this.add(simpleBuilding, land, player, lights, buildingVisualization);
     }
     // ...
