@@ -173,7 +173,7 @@ class Building extends Group {
         }
       });
       this.state.fracturedPieces.push(
-        {childObj, submeshes, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
+        {childObj, submeshes, startingPos, mass: 0, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
     }
   }
 
@@ -185,7 +185,7 @@ class Building extends Group {
     }
 
     this.body = new CANNON.Body({ // parameter definitions defined at the bottom of this script
-      mass: 0, // mass input parameter. Set it to 0 because a building shouldn't be moving anyway. But building mass is good for weighing the pieces individually.
+      mass: 0, // mass input parameter. Set it to 0 because a building shouldn't be moving anyway.
       shape: this.shape,
       material: new CANNON.Material({
         friction: friction,
@@ -200,6 +200,11 @@ class Building extends Group {
     });
     this.body.updateMassProperties(); // Need to call this after setting up the parameters.
 
+    // For calculating indiv part mass % based on volume.
+    this.mainMass = mass;
+    this.mainVolume = this.shape.volume();
+    this.totalVolume = 0;
+
     // Add body to the world (physics world)
     parent.state.world.addBody(this.body);
 
@@ -209,24 +214,33 @@ class Building extends Group {
     this.quaternion.copy(this.body.quaternion);
   }
 
-  initPhysicsForFracturedPiece(parent, object, submeshes, index, startingPos, mass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
+  calculateShapeAndVolume(submeshes) { // Given a set of submeshes, create a convex polyhedron shape and return its shape and volume
+    const info = mergeVerticesAndFaces(submeshes);
+    const shape = createConvexPolyhedronFromGeometry(info); // object is of type "BufferedGeometry" // generating a convex-hulled, shape-specific collider
+    let volume = shape.volume();
+    this.totalVolume += volume;
+    return { shape, volume };
+  }
+
+  initPhysicsForFracturedPiece(parent, object, shape, volume, index, startingPos, additionalMass, friction, restitution, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
     /*// Calculate the dimensions of the object
     const box = new Box3().setFromObject(object);
     const size = new Vector3();
     box.getSize(size);
     // Create a Cannon.js body for the object
-    const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));*/
-    const info = mergeVerticesAndFaces(submeshes);
-    const shape = createConvexPolyhedronFromGeometry(info); // object is of type "BufferedGeometry" // generating a convex-hulled, shape-specific collider
+    const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));*/ // we use a more precise shape definition now.
+    let avgVolume = (this.mainVolume + this.totalVolume) / 2.0;
+    let volumeRatio = volume / avgVolume;
+    let newMass = volumeRatio * this.mainMass + additionalMass; // weighted by volume, part of main mesh so portion of the mass, plus additional mass for tuning
 
     const body = new CANNON.Body({
-      mass: mass, // in the future, could be weighted by volume %
+      mass: newMass, // the weighted mass.
       shape: shape,
       material: new CANNON.Material({
         friction: friction,
         restitution: restitution,
       }),
-      position: object.position.add(startingPos),
+      position: new Vector3().copy(object.position).add(startingPos), // object.position.add(startingPos), either one works
       linearDamping: linearDamping,
       angularDamping: angularDamping,
       fixedRotation: fixedRotation,
@@ -267,10 +281,16 @@ class Building extends Group {
     // }
 
     // Spawn the fractured pieces
+    let shapeAndVolumeCache = [];
+    for (let i = 0; i < this.state.fracturedPieces.length; i++) {
+      // Calculate and the shape and cumulative volume info for each piece
+      let info = this.state.fracturedPieces[i];
+      shapeAndVolumeCache[i] = this.calculateShapeAndVolume(info.submeshes);
+    }
     for (let i = 0; i < this.state.fracturedPieces.length; i++) {
       // Initialize physics for the fractured piece
       let info = this.state.fracturedPieces[i];
-      this.initPhysicsForFracturedPiece(parent, info.childObj, info.submeshes, i, info.startingPos, info.mass, info.friction, info.restitution, 
+      this.initPhysicsForFracturedPiece(parent, info.childObj, shapeAndVolumeCache[i].shape, shapeAndVolumeCache[i].volume, i, info.startingPos, info.mass, info.friction, info.restitution, 
         info.linearDamping, info.angularDamping, info.fixedRotation, info.collisionFilterGroup, info.collisionFilterMask);
       // Initialize visuals
       parent.add(info.childObj); // why parent.add instead of this.add?
