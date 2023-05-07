@@ -63,11 +63,11 @@ class GameScene extends Scene {
             console.log("Game starts!");
             // game starts, can spawn waves and stuff. 
             // TODO
-            this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
+            this.startGameButton.__li.firstElementChild.textContent = "DISABLED: pause game first";
             this.gameState = GAMESTATE_INGAME; // for now
         }
-        // okay we COULD include  || this.gameState == GAMESTATE_PAUSED for reloading too, but fatfinger syndrome is a thing so...
-        else if (this.gameState == GAMESTATE_INGAME) { // reloads the current level
+        // okay we COULD include  || this.gameState == GAMESTATE_INGAME for reloading too, but fatfinger syndrome is a thing so...
+        else if (this.gameState == GAMESTATE_PAUSED) { // reloads the current level
             // Right now, this scene is gone, and a new copy takes over, so doesn't matter anymore.
             this.state.gui.destroy(); // destroy the current GUI
             this.sharedState.scene = new GameScene(this.camera, this.sharedState); // replace this scene itself with a new scene
@@ -81,13 +81,13 @@ class GameScene extends Scene {
             console.log("Game paused!");
             this.gameState = GAMESTATE_PAUSED;
             this.pauseResumeButton.__li.firstElementChild.textContent = "Resume Game";
-            this.startGameButton.__li.firstElementChild.textContent = "DISABLED: resume game first";
+            this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
         }
         else if (this.gameState == GAMESTATE_PAUSED) { // resume the session
             console.log("Game resumes!");
             this.gameState = GAMESTATE_INGAME;
             this.pauseResumeButton.__li.firstElementChild.textContent = "Pause Game";
-            this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
+            this.startGameButton.__li.firstElementChild.textContent = "DISABLED: pause game first";
         }
     }
 
