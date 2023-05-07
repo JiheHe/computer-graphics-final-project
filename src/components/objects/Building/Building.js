@@ -334,7 +334,7 @@ class Building extends Group {
 // collisionFilterMask - a property that defines which groups an object should collide with, bitwise OR of the groups. -1 means NONE by default.
 
 class Skyscraper extends Building { // An example of how to make a building type
-  constructor(parent, useModel, startingPos, dimensions = new Vector3(2, 10, 2), mass = 10, friction = 1, restitution = 0,
+  constructor(parent, useModel, startingPos, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 10, friction = 1, restitution = 0,
     linearDamping = 0.9, angularDamping = 0.9, fixedRotation = false, collisionFilterGroup = -1, collisionFilterMask = -1) {
     super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, friction, restitution, 
       linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);

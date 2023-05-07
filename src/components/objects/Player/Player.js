@@ -31,7 +31,7 @@ function createCylinderColliderMesh(playerBody) { // A helper function for visua
 // IMPORTANT: the player movement is fully simulated by Cannon.JS's physics engine, NOT using TWEEN. 
 
 class Player extends Group {
-    constructor(parent) {
+    constructor(parent, startingPos) {
         // Call parent Group() constructor
         super();
 
@@ -53,7 +53,7 @@ class Player extends Group {
         });
 
         // Initialize physical properties of the object
-        this.initPhysics(parent);
+        this.initPhysics(parent, startingPos);
 
         // Update Three.js object position to match Cannon.js body position (Two different systems)
         this.position.copy(this.body.position);
@@ -63,7 +63,7 @@ class Player extends Group {
         parent.addToUpdateList(this);
     }
 
-    initPhysics(parent) { // Initialize physical properties of the object (TODO: tune them later)
+    initPhysics(parent, startingPos) { // Initialize physical properties of the object (TODO: tune them later)
         // Set up Cannon.js physics
         this.body = new CANNON.Body({
             mass: 70, // The mass of the object in kg, this is the mass of standard human male
@@ -73,7 +73,7 @@ class Player extends Group {
                 restitution: 0.1 }), // how much object bounces on contact 
             linearDamping: 0.8, // A factor that reduces the object's linear velocity over time, simulating friction or air resistence.
             fixedRotation: true, // When true, disables forced rotation due to collision
-            position: new CANNON.Vec3(5, 1, 5), // The starting position of the object in the physics world.
+            position: startingPos, // The starting position of the object in the physics world.
         });
         this.body.updateMassProperties(); // Need to call this after setting up the parameters.
         

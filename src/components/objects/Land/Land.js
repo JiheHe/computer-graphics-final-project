@@ -26,8 +26,11 @@ function createBoxColliderMesh(landBody) { // A helper function for visualizing 
     return mesh;
 }
 
+// IMPORTANT: We are going to assume the collider mesh of the land is a BOX for simplicity. So please use flat land assets.
+// Otherwise, employ the same methods from Building.js to obtain convex polyhedron collider mesh.
+
 class Land extends Group {
-    constructor(parent) {
+    constructor(parent, startingPos) {
         // Call parent Group() constructor
         super();
 
@@ -44,7 +47,7 @@ class Land extends Group {
             this.add(gltf.scene);
         
             // Initialize physical properties of the object
-            this.initPhysics(parent, gltf);
+            this.initPhysics(parent, gltf, startingPos);
 
             // Update Three.js object position to match Cannon.js body position (Two different systems)
             this.position.copy(this.body.position);
@@ -52,7 +55,7 @@ class Land extends Group {
         });
     }
 
-    initPhysics(parent, gltf) { // obj file can directly pass in obj as parameter.
+    initPhysics(parent, gltf, startingPos) { // obj file can directly pass in obj as parameter.
         // let landShape = new CANNON.Box(new CANNON.Vec3(10, 0.1, 10)); // if dim matches that of in Blender, then exact fit.
         // All these code extracts the bounding box from the input mesh and uses that bounding box as the box collider
         let landShape;
@@ -75,7 +78,7 @@ class Land extends Group {
             material: new CANNON.Material({ 
                 friction: 0.01, // how much object slides 
                 restitution: 0.1 }), // how much object bounces on contact 
-            position: new CANNON.Vec3(0, 0, 0), // Set the position according to your land model
+            position: startingPos, // Set the position according to your land model
         });
 
         this.body.updateMassProperties(); // Need to call this after setting up the parameters.
