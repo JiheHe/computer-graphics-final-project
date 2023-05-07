@@ -13,7 +13,12 @@ import { GameScene } from 'scenes';
 // Initialize core ThreeJS components
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
-const scene = new GameScene(camera);
+
+// Create a shared state object to pass around (communicates between this and the scene objs created)
+const sharedState = {};
+// Assign the scene property after sharedState has been created
+sharedState.scene = new GameScene(camera, sharedState);
+// TODO: add additional info parameters.
 
 // Set up camera
 camera.position.set(6, 3, -10);
@@ -37,6 +42,7 @@ controls.update();
 
 // Render loop
 const onAnimationFrameHandler = (timeStamp) => {
+    const scene = sharedState.scene;
     controls.update();
     renderer.render(scene, camera);
     scene.update && scene.update(timeStamp);
