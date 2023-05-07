@@ -5,7 +5,7 @@ import { Skyscraper } from 'objects';
 import { BasicLights } from 'lights';
 import * as CANNON from 'cannon-es'; // aliasing
 
-class SeedScene extends Scene {
+class GameScene extends Scene {
     constructor(camera) {
         // Call parent Scene() constructor
         super();
@@ -72,4 +72,4 @@ class SeedScene extends Scene {
     }
 }
 
-export default SeedScene;
+export default GameScene;

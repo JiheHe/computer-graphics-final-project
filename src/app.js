@@ -8,12 +8,12 @@
  */
 import { WebGLRenderer, PerspectiveCamera, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { SeedScene } from 'scenes';
+import { GameScene } from 'scenes';
 
 // Initialize core ThreeJS components
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
-const scene = new SeedScene(camera);
+const scene = new GameScene(camera);
 
 // Set up camera
 camera.position.set(6, 3, -10);
