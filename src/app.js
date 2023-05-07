@@ -8,12 +8,17 @@
  */
 import { WebGLRenderer, PerspectiveCamera, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { SeedScene } from 'scenes';
+import { GameScene } from 'scenes';
 
 // Initialize core ThreeJS components
-const scene = new SeedScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
+
+// Create a shared state object to pass around (communicates between this and the scene objs created)
+const sharedState = {};
+// Assign the scene property after sharedState has been created
+sharedState.scene = new GameScene(camera, sharedState);
+// TODO: add additional info parameters.
 
 // Set up camera
 camera.position.set(6, 3, -10);
@@ -32,11 +37,12 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 4;
-controls.maxDistance = 16;
+controls.maxDistance = 30;
 controls.update();
 
 // Render loop
 const onAnimationFrameHandler = (timeStamp) => {
+    const scene = sharedState.scene;
     controls.update();
     renderer.render(scene, camera);
     scene.update && scene.update(timeStamp);
