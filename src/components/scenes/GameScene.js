@@ -17,6 +17,8 @@ class GameScene extends Scene {
 
         this.gameState = GAMESTATE_NOTINGAME; // the variable to control the state machine
 
+        this.gameTimer = new GameTimer(this); // the game timer.
+
         // Init state
         this.state = {
             // GUI stuff
@@ -56,6 +58,10 @@ class GameScene extends Scene {
 
         // Initializes a scene; TODO: can work with level loading using an info param or smth.
         this.initializeTestingScene(); 
+
+        // Load in the text elements. Variable should've been set in scene initialization
+        this.sharedState.timerText.textContent = "Time Remaining: " + this.numSecondsToSurvive;
+        this.sharedState.healthText.textContent = "Health: " + this.player.health;
     }
 
     startGameplay() {
@@ -63,6 +69,7 @@ class GameScene extends Scene {
             console.log("Game starts!");
             // game starts, can spawn waves and stuff. 
             // TODO
+            this.gameTimer.startTimer();
             this.startGameButton.__li.firstElementChild.textContent = "DISABLED: pause game first";
             this.gameState = GAMESTATE_INGAME; // for now
         }
@@ -80,6 +87,7 @@ class GameScene extends Scene {
         if (this.gameState == GAMESTATE_INGAME) { // pause the session
             console.log("Game paused!");
             this.gameState = GAMESTATE_PAUSED;
+            this.gameTimer.pauseTimer();
             this.pauseResumeButton.__li.firstElementChild.textContent = "Resume Game";
             this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
         }
@@ -89,6 +97,16 @@ class GameScene extends Scene {
             this.pauseResumeButton.__li.firstElementChild.textContent = "Pause Game";
             this.startGameButton.__li.firstElementChild.textContent = "DISABLED: pause game first";
         }
+    }
+
+    stagePassed() { // the user survives the timer!
+        console.log("You survived!");
+        this.pauseResumeGameplay(); // for now
+    }
+
+    stageFailed() { // the user ran out of health before timer ends.
+        console.log("You failed");
+        this.pauseResumeGameplay(); // for now
     }
 
     addToUpdateList(object) {
@@ -108,9 +126,16 @@ class GameScene extends Scene {
         switch(this.gameState) { // state machine :D
             case GAMESTATE_INGAME:
                 {
-                    const { updateList } = this.state;
+                    // Check timer
+                    let timeRemaining = this.numSecondsToSurvive - this.gameTimer.timeElapsedInSeconds();
+                    this.sharedState.timerText.textContent = "Time Remaining: " + Math.floor(timeRemaining); // in seconds
+                    if (timeRemaining <= 0) this.stagePassed();
+     
+                    // Update physics world
+                    this.state.world.step(1 / 60);
 
                     // Call update for each object in the updateList
+                    const { updateList } = this.state;
                     for (const obj of updateList) {
                         if (obj.name === 'player') {
                             obj.update(this.camera);
@@ -118,9 +143,11 @@ class GameScene extends Scene {
                             obj.update(timeStamp);
                         }
                     }
-            
-                    // Update physics world
-                    this.state.world.step(1 / 60);
+
+                    // Check health
+                    this.sharedState.healthText.textContent = "Health: " + this.player.health;
+                    if (this.player.health <= 0) this.stageFailed();
+                    // this.player.loseHealth(); // just for example.
                 }
                 break;
 
@@ -136,6 +163,9 @@ class GameScene extends Scene {
     initializeTestingScene() { // this is a testing scene.
         // Set background to a nice color
         this.background = new Color(0x7ec0ee);
+        
+        // Set number of numbers player is expected to survive in this scene
+        this.numSecondsToSurvive = 60; 
 
         // Create all the materials. // The material properties of the object: {how much object slides, how much object bounces on contact} 
         let characterMaterial = new CANNON.Material({ friction: 0.001, restitution: 0.3 }); 
@@ -146,8 +176,9 @@ class GameScene extends Scene {
         // const characterBuildingContactMaterial = new CANNON.ContactMaterial(characterMaterial, skyscraperMaterial, {friction: 0.5, restitution: 0.6});
         // this.state.world.addContactMaterial(characterBuildingContactMaterial);  // doesn't feel the effect for this one rn...
 
-        // Add meshes to scene
+        // Add meshes to scene (CONVENTION: use this.player = player after)
         const player = new Player(this, new CANNON.Vec3(5, 1, 5), characterMaterial); // the player; can specify its starting position
+        this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
         const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial); // the floor; can specify its starting position
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
         const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
@@ -157,6 +188,42 @@ class GameScene extends Scene {
     }
     // ...
 
+}
+
+class GameTimer { // a very simple class with game timer logic.
+    constructor(scene) {
+        this.milliSecondsAccumulated = 0;
+        this.benchmarkTime = 0;
+        this.scene = scene;
+        this.wasPaused = false;
+    }
+
+    startTimer() {
+        this.benchmarkTime = Date.now();
+        this.scene.addToUpdateList(this); // the timer is now affected by scene pausing / unpausing
+    }
+
+    pauseTimer() { // logs the current milliseconds before pausing
+        const timeNow = Date.now();
+        this.milliSecondsAccumulated += timeNow - this.benchmarkTime;
+        this.wasPaused = true;
+    }
+
+    update() { // this update is only executed if scene's update is not paused
+        if (this.wasPaused) {
+            this.benchmarkTime = Date.now();
+            this.wasPaused = false;
+        }
+        else {
+            const timeNow = Date.now();
+            this.milliSecondsAccumulated += timeNow - this.benchmarkTime;
+            this.benchmarkTime = timeNow;
+        }
+    }
+
+    timeElapsedInSeconds() {
+        return this.milliSecondsAccumulated / 1000;
+    }
 }
 
 export default GameScene;

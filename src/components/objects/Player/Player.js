@@ -44,9 +44,11 @@ class Player extends Group {
             colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
         };
 
+        // Player's health, for gameflow.
+        this.health = 100;
+
         // Load object
         const loader = new GLTFLoader();
-
         this.name = 'player';
         loader.load(MODEL, (gltf) => {
             this.add(gltf.scene);
@@ -336,6 +338,10 @@ class Player extends Group {
         // Log the positions of both the Cannon.js body and the Three.js visual object
         // console.log("Cannon.js body position:", this.body.position);
         // console.log("Three.js visual object position:", this.position);
+    }
+
+    loseHealth(amt = 1) { // player loses health... called for example by collision event between water and player
+        this.health -= amt;
     }
 }
 
