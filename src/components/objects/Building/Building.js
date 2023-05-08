@@ -6,7 +6,7 @@ import * as CANNON from 'cannon-es';
 import qh from 'quickhull3d'
 import SKYSCRAPER_MODEL from './skyscraper.gltf'; // import other buildling gltfs here. Make sure to follow the convention!
 
-function createConvexPolyhedronFromGeometry(geometry, parent = null) { // a helper function that creates a cannon.js convex polyhedron for a better-fit collider
+export function createConvexPolyhedronFromGeometry(geometry, parent = null) { // a helper function that creates a cannon.js convex polyhedron for a better-fit collider
   let convexVertices = geometry.vertices;
   const options = { skipTriangulation: true };
   let convexFaces = qh(convexVertices, options); // using QuickHull to create a quick convex hull given the list of vertices without triangulation
@@ -30,7 +30,7 @@ function createConvexPolyhedronFromGeometry(geometry, parent = null) { // a help
   return new CANNON.ConvexPolyhedron( {vertices: cannonVertices, faces: convexFaces} ); // constructs the convex polyhedron
 }
 
-function extractVerticesAndFacesFromBufferGeometry(bufferGeometry) { // given a loader buffer geometry, outputs the vertices and faces of the mesh following the convention
+export function extractVerticesAndFacesFromBufferGeometry(bufferGeometry) { // given a loader buffer geometry, outputs the vertices and faces of the mesh following the convention
   // Extract the vertices first, basically the same as geometry.attributes.position.
   const vertices = []; 
   const positionAttribute = bufferGeometry.getAttribute('position');
@@ -68,7 +68,7 @@ function extractVerticesAndFacesFromBufferGeometry(bufferGeometry) { // given a 
   return { vertices, faces };
 }
 
-function mergeVerticesAndFaces(submeshes) { // given a list of meshes, merge all their vertices and faces together as if they are one big mesh. For convex hulling.
+export function mergeVerticesAndFaces(submeshes) { // given a list of meshes, merge all their vertices and faces together as if they are one big mesh. For convex hulling.
   let mergedVertices = [];
   let mergedFaces = [];
   let vertexOffset = 0;

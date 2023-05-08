@@ -1,8 +1,9 @@
-import { Group, Box3, Vector3 } from 'three';
+import { Group, Box3, Vector3, Quaternion } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
 import MODEL from './land.gltf';
 import { BoxGeometry, MeshBasicMaterial, Mesh } from 'three';
+import { createConvexPolyhedronFromGeometry, mergeVerticesAndFaces } from '../Building/Building.js';
 
 function createBoxColliderMesh(landBody) { // A helper function for visualizing a box collider
     console.log(landBody);
@@ -26,11 +27,12 @@ function createBoxColliderMesh(landBody) { // A helper function for visualizing 
     return mesh;
 }
 
-// IMPORTANT: We are going to assume the collider mesh of the land is a BOX for simplicity. So please use flat land assets.
-// Otherwise, employ the same methods from Building.js to obtain convex polyhedron collider mesh.
+// IMPORTANT: We are going to assume the base of the land is essentially/strictly a box with NO out of boundary reach, so it's up to the user 
+// to input correctly "tiled" land meshes for us to work with.
 
 class Land extends Group {
-    constructor(parent, startingPos, material) {
+    constructor(parent, startingPos, material, boundaryWallParams,
+        mass = 0, collisionFilterGroup = -1, collisionFilterMask = -1, linearDamping = 0, angularDamping = 0, fixedRotation = true) { // heuristical
         // Call parent Group() constructor
         super();
 
@@ -44,18 +46,61 @@ class Land extends Group {
         };
 
         loader.load(MODEL, (gltf) => {
+            // Initialize physical properties of each land part in the file, following the convention
+            this.traverseAndInitPieces(parent, gltf.scene.children, startingPos, boundaryWallParams, mass, material, collisionFilterGroup, collisionFilterMask, linearDamping, angularDamping, fixedRotation);
+            // Visualize the whole scene, since all landshapes are static.
             this.add(gltf.scene);
-        
-            // Initialize physical properties of the object
-            this.initPhysics(parent, gltf, startingPos, material);
 
             // Update Three.js object position to match Cannon.js body position (Two different systems)
-            this.position.copy(this.body.position);
+            this.position.copy(startingPos); // this.body.position. Since the shape is static, no need for constant update. Should be 1 to 1 coord ratio.
             this.position.add(this.state.colliderOffset);
         });
     }
 
-    initPhysics(parent, gltf, startingPos, material) { // obj file can directly pass in obj as parameter.
+    // Convention: When given a gltf scene, the initial children objects ALL represent the land parts. (make sure to not export other stuff)
+    // Convention #2: the FIRST child obj (youngest-created) has to represent the overall contour boundary (if too much hustle, then just call the command on every childObj)
+    // Goal is to traverse each land part and generate a unique convex collider for it to cover depth etc.
+    // But this requires that in the GLTF file, mountains etc should be its own obj on top of the land.
+    // AGAIN, DON'T FORGET TO SCALE TO 1! COLLIDER OFF = NOT SCALED TO 1!
+    traverseAndInitPieces(parent, childObjs, startingPos, boundaryWallParams, mass, material, collisionFilterGroup, collisionFilterMask, linearDamping, angularDamping, fixedRotation) {
+        for (let i = 0; i < childObjs.length; i++) {
+            // Grab the part meshes
+            let childObj = childObjs[i]; // current part
+            const submeshes = []; // meshes within this part
+            childObj.traverse((child) => { // childObj is also included in the traversal. MAYBE???
+                if (child.isMesh) {
+                    submeshes.push(child);
+                }
+            });
+
+            // Spawn in a collider for that part
+            const info = mergeVerticesAndFaces(submeshes);
+            const shape = createConvexPolyhedronFromGeometry(info); // generating a convex-hulled, shape-specific collider
+
+            // Add in the collider for that part
+            const body = new CANNON.Body({
+                mass: mass, // most likely 0. Land shouldn't be moving.
+                shape: shape,
+                material: material,
+                position: new Vector3().copy(childObj.position).add(startingPos), // object.position.add(startingPos), either one works
+                linearDamping: linearDamping, // most likely 0. Land shouldn't be moving.
+                angularDamping: angularDamping, // most likely 0. Land shouldn't be moving.
+                fixedRotation: fixedRotation, // most likely true. Land shouldn't be moving.
+                collisionFilterGroup: collisionFilterGroup,
+                collisionFilterMask: collisionFilterMask,
+            });
+            body.updateMassProperties(); // Need to call this after setting up the parameters.
+          
+            // Add the Cannon.js body to the world
+            parent.state.world.addBody(body); 
+        }
+
+        // Spawn in the tile contour boundary collider. CONVENTION: first child obj (Can twerk to check all childObj). Also wall thickness of 0.1 is enough.
+        createWallCollidersAndVisualize(childObjs[0], boundaryWallParams.wallHeight, parent, boundaryWallParams.wallTurnOffIndexList, 
+            0.1, boundaryWallParams.isVisible); // FOR TESTING ONLY
+    }
+
+    /*initPhysics(parent, gltf, startingPos, material) { // obj file can directly pass in obj as parameter.
         // let landShape = new CANNON.Box(new CANNON.Vec3(10, 0.1, 10)); // if dim matches that of in Blender, then exact fit.
         // All these code extracts the bounding box from the input mesh and uses that bounding box as the box collider
         let landShape;
@@ -84,10 +129,233 @@ class Land extends Group {
         parent.state.world.addBody(this.body);
 
         // for debugging: visualizing collider
-        /*this.colliderMesh = createBoxColliderMesh(this.body);
-        this.colliderMesh.position.copy(this.body.position);
-        parent.add(this.colliderMesh);*/
+        // this.colliderMesh = createBoxColliderMesh(this.body);
+        // this.colliderMesh.position.copy(this.body.position);
+        // parent.add(this.colliderMesh);
+    }*/
+}
+
+
+class WallCollider {
+    constructor(position, quaternion, dimensions, world) {
+        // Initialize your wall collider with the given position, rotation, and dimensions
+        const shape = new CANNON.Box(new CANNON.Vec3(dimensions.x / 2, dimensions.y / 2, dimensions.z / 2));
+        const body = new CANNON.Body({  // invisible collider properties
+            mass: 0,  // static
+            shape: shape,
+            material: new CANNON.Material({friction: 1, restitution: 1}),
+            position: position,
+            quaternion: quaternion,
+            collisionFilterGroup: -1, // None
+            collisionFilterMask: -1, // None
+        });
+        this.collider = body;
+
+        this.dimensions = dimensions;
+        this.position = position;
+        this.quaternion = quaternion;
+        this.world = world;
+    }
+
+    addToWorld() {
+        this.world.addBody(this.collider);
+    }
+
+    removeFromWorld() {
+        this.world.removeBody(this.collider);
+    }
+
+    enable() {
+        this.collider.collisionResponse = true;
+    }
+
+    disable() {
+        this.collider.collisionResponse = false;
     }
 }
+
+// The main function that adds a wall collider to every edge of this convention-following landscape tile.
+function createWallCollidersAndVisualize(mesh, height, parentScene, turnOffWallIndexList = [], thickness = 0.1, visualize = false) {
+    // Prep all the collider objects
+    const wallColliders = createWallColliders(mesh, height, parentScene.state.world, thickness);
+
+    // Sort the indices in descending order
+    turnOffWallIndexList.sort((a, b) => b - a);
+    // Iterate through the turnOffWallIndexList and remove the corresponding walls. This is O(n log n), faster than O(n^2)
+    for (const removeWallIndex of turnOffWallIndexList) {
+        if (removeWallIndex >= 0 && removeWallIndex < wallColliders.length) { // has error check
+            wallColliders.splice(removeWallIndex, 1);
+        }
+    }
+
+    // Add in the walls on allowed boundaries!
+    for (let i = 0; i < wallColliders.length; i++) {
+        let collider = wallColliders[i];
+        collider.addToWorld(); // physicaly add the collider
+        if (visualize) {
+            const material = new MeshBasicMaterial({ color: 0xff00ff, wireframe: true });
+            const colliderVisual = createColliderVisuals(collider, material);
+            parentScene.add(colliderVisual); // visually add the collider
+        }
+    }
+}
+
+// Creates a WallCollider object given the parameters.
+function createWallColliders(mesh, height, world, thickness) {
+    // 1. Identify the bottom face vertices of the mesh
+    // 2. Find the edges of the bottom face
+    const edges = extractBottomFaceEdges(mesh); // counter-clockwise traversal of contour.
+
+    // 3. Generate a wall collider for each edge
+    const wallColliders = edges.map((edge) => {
+        const edgeVector = new Vector3().subVectors(edge[1], edge[0]);
+        const edgeLength = edgeVector.length();
+
+        // Calculate the orientation of the box collider
+        const edgeDirection = edgeVector.clone().normalize();
+        edgeDirection.y = 0; // Project edge direction onto the XZ plane
+        const referenceVector = new Vector3(1, 0, 0);
+        let angle = referenceVector.angleTo(edgeDirection);
+        const crossProduct = new Vector3().crossVectors(referenceVector, edgeDirection);
+        const angleSign = crossProduct.y > 0 ? 1 : -1;
+        angle *= angleSign;
+        const quaternion = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle);
+
+        // Compute the offset vector
+        const offset = thickness / 2; // so the side aligns
+        let offsetVector = new Vector3(edgeDirection.z, 0, -edgeDirection.x).multiplyScalar(offset);
+        offsetVector.y += height / 2; // so the bottom aligns
+
+        // Calculate the midpoint of the edge and update the position with the offset
+        const midpoint = new Vector3().addVectors(edge[0], edge[1]).multiplyScalar(0.5).add(offsetVector);
+
+        const dimensions = new Vector3(edgeLength, height, thickness);
+        const position = new CANNON.Vec3(midpoint.x, midpoint.y, midpoint.z);
+
+        return new WallCollider(position, quaternion, dimensions, world);
+    });
+  
+    return wallColliders;
+}
+
+// Showcases a visualization of the current (Box) collider.
+function createColliderVisuals(collider, material) {
+    // Get collider position and dimensions
+    const position = collider.position;
+    const dimensions = collider.dimensions;
+  
+    // Create a BoxGeometry using the dimensions
+    const geometry = new BoxGeometry(dimensions.x, dimensions.y, dimensions.z);
+  
+    // Create a Mesh using the geometry and material
+    const mesh = new Mesh(geometry, material);
+  
+    // Set the mesh position to the collider's position
+    mesh.position.set(position.x, position.y, position.z);
+  
+    // Apply the same rotation as the collider
+    mesh.quaternion.copy(collider.quaternion);
+  
+    return mesh;
+}
+
+// Given a geometry or bufferedGeometry mesh, this helper function finds and extracts the vertices that make up the bottom
+// of a tiled shape via a simple heuristic: the bottom has to be flat, parallel to XZ plane. So we can extract all vertices that
+// are on the same Y axis height as the bottom face (within a threshold for error tolerance).
+// CONDITIONS: the bottom must be flat and smooth, and the side edges must be straight.
+// Can cut and smooth out the bottom with infusion in Blender. :D.
+function extractBottomFaceEdges(mesh, threshold = 0.01) {
+    // Get the bounding box
+    const bufferGeometry = mesh.geometry; // assume buffered geometry.
+    bufferGeometry.computeBoundingBox();
+    const boundingBox = bufferGeometry.boundingBox;
+
+    // Retrieves the bottom faces (triangles) of the mesh
+    const bottomY = boundingBox.min.y;
+    const positionAttribute = bufferGeometry.getAttribute('position');
+    const faces = []; // stores a bunch of triangles of coordinates
+    if (bufferGeometry.index != null) {  // has index
+        const indexAttribute = bufferGeometry.getIndex();
+        for (let i = 0; i < indexAttribute.count; i += 3) {
+            const face = [
+                new Vector3(
+                    positionAttribute.getX(indexAttribute.getX(i)),
+                    positionAttribute.getY(indexAttribute.getX(i)),
+                    positionAttribute.getZ(indexAttribute.getX(i))
+                ),
+                new Vector3(
+                    positionAttribute.getX(indexAttribute.getX(i + 1)),
+                    positionAttribute.getY(indexAttribute.getX(i + 1)),
+                    positionAttribute.getZ(indexAttribute.getX(i + 1))
+                ),
+                new Vector3(
+                    positionAttribute.getX(indexAttribute.getX(i + 2)),
+                    positionAttribute.getY(indexAttribute.getX(i + 2)),
+                    positionAttribute.getZ(indexAttribute.getX(i + 2))
+                )
+            ];
+            if (
+                Math.abs(face[0].y - bottomY) <= threshold &&
+                Math.abs(face[1].y - bottomY) <= threshold &&
+                Math.abs(face[2].y - bottomY) <= threshold
+            ) {
+                faces.push(face);
+            }
+        }
+    }
+    else { // no index
+        for (let i = 0; i < positionAttribute.count; i += 3) {
+            const face = [
+                new Vector3(
+                    positionAttribute.getX(i),
+                    positionAttribute.getY(i),
+                    positionAttribute.getZ(i)
+                ),
+                new Vector3(
+                    positionAttribute.getX(i + 1),
+                    positionAttribute.getY(i + 1),
+                    positionAttribute.getZ(i + 1)
+                ),
+                new Vector3(
+                    positionAttribute.getX(i + 2),
+                    positionAttribute.getY(i + 2),
+                    positionAttribute.getZ(i + 2)
+                )
+            ];
+            if (
+                Math.abs(face[0].y - bottomY) <= threshold &&
+                Math.abs(face[1].y - bottomY) <= threshold &&
+                Math.abs(face[2].y - bottomY) <= threshold
+            ) {
+                faces.push(face);
+            }
+        }
+    }
+
+    // Retrieves the contour edges of the main bottom face, in order
+    const edges = [];
+    for (const triangle of faces) {
+        for (let i = 0; i < 3; i++) {
+            const vertexA = triangle[i];
+            const vertexB = triangle[(i + 1) % 3];
+
+            let isDuplicate = false;
+            for (let j = 0; j < edges.length; j++) {
+                let edge = edges[j];
+                if ((edge[0].equals(vertexA) && edge[1].equals(vertexB)) || (edge[0].equals(vertexB) && edge[1].equals(vertexA))) {
+                    // If the edge exists, remove it from the edges array
+                    edges.splice(j, 1);
+                    isDuplicate = true;
+                }
+            }
+            if (!isDuplicate) {
+                edges.push([vertexA, vertexB]);
+            }
+        }
+    }
+
+    return edges;
+}
+
 
 export default Land;

@@ -14,11 +14,17 @@ import { GameScene } from 'scenes';
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
+
+// Some html texts for gameState. TODO: potential visual upgrade?
+const timerText = createTextElement("Time Remaining: ", { top: '20px', left: '20px' }, 1000);
+const healthText = createTextElement("Health: ", { top: '40px', left: '20px' }, 1000);
+
 // Create a shared state object to pass around (communicates between this and the scene objs created)
-const sharedState = {};
+const sharedState = {timerText, healthText};
 // Assign the scene property after sharedState has been created
 sharedState.scene = new GameScene(camera, sharedState);
 // TODO: add additional info parameters.
+
 
 // Set up camera
 camera.position.set(6, 3, -10);
@@ -59,3 +65,15 @@ const windowResizeHandler = () => {
 };
 windowResizeHandler();
 window.addEventListener('resize', windowResizeHandler, false);
+
+// A helper function that adds a text to the top left of the page, specified with some parameter. HTML style.
+function createTextElement(textContent, position, zIndex) {
+    const textElement = document.createElement('div');
+    textElement.textContent = textContent;
+    textElement.style.position = 'fixed';
+    textElement.style.top = position.top || '10px';
+    textElement.style.left = position.left || '10px';
+    textElement.style.zIndex = zIndex || '999'; // Make sure the text element is on top of other elements
+    document.body.appendChild(textElement);
+    return textElement;
+  }
