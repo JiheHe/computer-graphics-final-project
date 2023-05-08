@@ -179,7 +179,8 @@ class GameScene extends Scene {
         // Add meshes to scene (CONVENTION: use this.player = player after)
         const player = new Player(this, new CANNON.Vec3(5, 1, 5), characterMaterial); // the player; can specify its starting position
         this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
-        const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial); // the floor; can specify its starting position
+        const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
+            {wallHeight: 5, wallTurnOffIndexList: [19, 8], isVisible: true});  // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
         const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
         const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
