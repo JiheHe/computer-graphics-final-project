@@ -56,16 +56,14 @@ class Land extends Group {
             this.traverseAndInitPieces(parent, gltf.scene.children, startingPos, boundaryWallParams, mass, materiaL, collisionFilterGroup, collisionFilterMask, linearDamping, angularDamping, fixedRotation);
             // Visualize the whole scene, since all landshapes are static.
             this.add(gltf.scene);
+            console.log(gltf.scene);
 
             // Update Three.js object position to match Cannon.js body position (Two different systems)
             this.position.copy(startingPos); // this.body.position. Since the shape is static, no need for constant update. Should be 1 to 1 coord ratio.
             this.position.add(this.state.colliderOffset);
 
-
-
-
             // Spawn in sea level riser box (too lazy to do a helper)
-            const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
+            /*const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
             bufferGeometry.computeBoundingBox();
             const boundingBox = bufferGeometry.boundingBox;
             // physical
@@ -102,7 +100,7 @@ class Land extends Group {
             // this.objectInContact = [];
             // parent.state.world.addEventListener("beginContact", this.handleContact.bind(this));
             // parent.state.world.addEventListener("endContact", this.handleDetact.bind(this));
-            body.addEventListener("collide", this.handleContact.bind(this));
+            body.addEventListener("collide", this.handleContact.bind(this));*/
         });
 
         // Add self to parent's update list
@@ -149,8 +147,8 @@ class Land extends Group {
         }
 
         // Spawn in the tile contour boundary collider. CONVENTION: first child obj (Can twerk to check all childObj). Also wall thickness of 0.1 is enough.
-        createWallCollidersAndVisualize(childObjs[0], boundaryWallParams.wallHeight, parent, boundaryWallParams.wallTurnOffIndexList, 
-            0.1, boundaryWallParams.isVisible); // FOR TESTING ONLY
+        // createWallCollidersAndVisualize(childObjs[0], boundaryWallParams.wallHeight, parent, boundaryWallParams.wallTurnOffIndexList, 
+        //   0.1, boundaryWallParams.isVisible); // FOR TESTING ONLY
     }
 
     handleContact(event) { // the function executed when a collision happens between something and the sea floor riser
