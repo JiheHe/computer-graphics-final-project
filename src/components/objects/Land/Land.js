@@ -1,8 +1,8 @@
-import { Group, Box3, Vector3, Quaternion } from 'three';
+import { Group, Box3, Face3, Vector3, Quaternion } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
 import MODEL from './land.gltf';
-import { BoxGeometry, MeshBasicMaterial, Mesh } from 'three';
+import { BoxGeometry, MeshBasicMaterial, Mesh, Geometry } from 'three';
 import { createConvexPolyhedronFromGeometry, mergeVerticesAndFaces } from '../Building/Building.js';
 
 function createBoxColliderMesh(landBody) { // A helper function for visualizing a box collider
@@ -26,6 +26,43 @@ function createBoxColliderMesh(landBody) { // A helper function for visualizing 
 
     return mesh;
 }
+
+/*function createVisualFromCannonBody(scene, shape, body, materialOptions) {
+    // convert the vertices to THREE.Vector3
+    var vertices = shape.vertices.map(function(v) {
+        return new Vector3(v.x, v.y, v.z);
+    });
+
+    // convert the faces to an array of vertex indices
+    var faces = shape.faces.map(function(face) {
+        // note: THREE.Face3 only supports triangles, so we need to ensure our faces are all triangles
+        // this code assumes all faces are either triangles or quadrilaterals
+        // you might need to add additional logic here if your faces can have more vertices
+        if (face.length === 3) {
+            return new Face3(face[0], face[1], face[2]);
+        } else if (face.length === 4) {
+            return [
+                new Face3(face[0], face[1], face[2]),
+                new Face3(face[0], face[2], face[3])
+            ];
+        }
+    }).flat();  // flatten the array
+
+    // create the geometry
+    var geometry = new Geometry();
+    geometry.vertices = vertices;
+    geometry.faces = faces;
+    // geometry.computeFaceNormals();  // optional, helps with lighting
+
+    // create the mesh
+    var material = new MeshBasicMaterial(materialOptions);
+    var mesh = new Mesh(geometry, material);
+    scene.add(mesh);  // assuming `scene` is your THREE.Scene
+
+    // return a function for updating the mesh
+    mesh.position.copy(body.position);
+    mesh.quaternion.copy(body.quaternion);
+}*/
 
 function randomInclusive(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -63,7 +100,7 @@ class Land extends Group {
             this.position.add(this.state.colliderOffset);
 
             // Spawn in sea level riser box (too lazy to do a helper)
-            /*const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
+            const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
             bufferGeometry.computeBoundingBox();
             const boundingBox = bufferGeometry.boundingBox;
             // physical
@@ -100,7 +137,7 @@ class Land extends Group {
             // this.objectInContact = [];
             // parent.state.world.addEventListener("beginContact", this.handleContact.bind(this));
             // parent.state.world.addEventListener("endContact", this.handleDetact.bind(this));
-            body.addEventListener("collide", this.handleContact.bind(this));*/
+            body.addEventListener("collide", this.handleContact.bind(this));
         });
 
         // Add self to parent's update list
@@ -146,9 +183,40 @@ class Land extends Group {
             parent.state.world.addBody(body); 
         }
 
+        /*const submeshes = []; // meshes within this part
+        scene.traverse((child) => { // childObj is also included in the traversal. MAYBE???
+            if (child.isMesh) {
+                submeshes.push(child);
+            }
+        });
+
+        // Spawn in a collider for that part
+        const info = mergeVerticesAndFaces(submeshes);
+        const shape = createConvexPolyhedronFromGeometry(info); // generating a convex-hulled, shape-specific collider
+
+        // Add in the collider for that part
+        const body = new CANNON.Body({
+            mass: mass, // most likely 0. Land shouldn't be moving.
+            shape: shape,
+            material: material,
+            position: startingPos, // object.position.add(startingPos), either one works
+            linearDamping: linearDamping, // most likely 0. Land shouldn't be moving.
+            angularDamping: angularDamping, // most likely 0. Land shouldn't be moving.
+            fixedRotation: fixedRotation, // most likely true. Land shouldn't be moving.
+            collisionFilterGroup: collisionFilterGroup,
+            collisionFilterMask: collisionFilterMask,
+        });
+        body.updateMassProperties(); // Need to call this after setting up the parameters.
+        parent.bodyIDToString[body.id] = "Land";
+
+        // createVisualFromCannonBody(parent, shape, body, { color: 0xff0000, wireframe: true });
+      
+        // Add the Cannon.js body to the world
+        parent.state.world.addBody(body); */
+
         // Spawn in the tile contour boundary collider. CONVENTION: first child obj (Can twerk to check all childObj). Also wall thickness of 0.1 is enough.
-        // createWallCollidersAndVisualize(childObjs[0], boundaryWallParams.wallHeight, parent, boundaryWallParams.wallTurnOffIndexList, 
-        //   0.1, boundaryWallParams.isVisible); // FOR TESTING ONLY
+        createWallCollidersAndVisualize(childObjs[0], boundaryWallParams.wallHeight, parent, boundaryWallParams.wallTurnOffIndexList, 
+          0.1, boundaryWallParams.isVisible); // FOR TESTING ONLY
     }
 
     handleContact(event) { // the function executed when a collision happens between something and the sea floor riser

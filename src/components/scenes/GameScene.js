@@ -183,7 +183,7 @@ class GameScene extends Scene {
         // this.state.world.addContactMaterial(waterFloorContactMaterial); 
 
         // Add meshes to scene (CONVENTION: use this.player = player after)
-        const player = new Player(this, new CANNON.Vec3(6, 1, 6), characterMaterial); // the player; can specify its starting position
+        const player = new Player(this, new CANNON.Vec3(6, 3, 6), characterMaterial); // the player; can specify its starting position
         this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
         const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
             {wallHeight: 5000, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
