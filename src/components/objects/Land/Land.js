@@ -90,6 +90,7 @@ class Land extends Group {
                 collisionFilterMask: collisionFilterMask,
             });
             body.updateMassProperties(); // Need to call this after setting up the parameters.
+            parent.bodyIDToString[body.id] = "Land";
           
             // Add the Cannon.js body to the world
             parent.state.world.addBody(body); 
