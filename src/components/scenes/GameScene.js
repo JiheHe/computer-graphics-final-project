@@ -189,9 +189,28 @@ class GameScene extends Scene {
             {wallHeight: 5000, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
             {start: -1, end: 10}); // start and end Y value of the rising platform that simulates rising tide  
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
-        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
-        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial,
-            new Vector3(5, 5, 5)); // an example of size/loc visualization
+        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(3, 1, 8), skyscraperMaterial,
+            new Vector3(3, 4, 3)); // an example of size/loc visualization
+        const buildingVisualization2 = new Skyscraper(this, false, new CANNON.Vec3(8, 0, 8), skyscraperMaterial,
+            new Vector3(2, 2, 2));
+        const buildingVisualization3 = new Skyscraper(this, false, new CANNON.Vec3(-2, 3, 6), skyscraperMaterial,
+            new Vector3(2, 6, 2));
+        const buildingVisualization4 = new Skyscraper(this, false, new CANNON.Vec3(-7, 4, 5), skyscraperMaterial,
+            new Vector3(3, 6, 3));
+        const buildingVisualization5 = new Skyscraper(this, false, new CANNON.Vec3(-9, 5, 1), skyscraperMaterial,
+            new Vector3(2, 6, 2));
+        const buildingVisualization6 = new Skyscraper(this, false, new CANNON.Vec3(-9, 6, -2), skyscraperMaterial,
+            new Vector3(2, 6, 2));
+        const buildingVisualization7 = new Skyscraper(this, false, new CANNON.Vec3(-7, 7, -4), skyscraperMaterial,
+            new Vector3(4, 8, 4));
+        const buildingVisualization8 = new Skyscraper(this, false, new CANNON.Vec3(-1, 7, -6), skyscraperMaterial,
+            new Vector3(4, 12, 4));
+        const buildingVisualization9 = new Skyscraper(this, false, new CANNON.Vec3(3, 8, -3), skyscraperMaterial,
+            new Vector3(3, 15, 3));
+        const buildingVisualization10 = new Skyscraper(this, false, new CANNON.Vec3(2, 8, 1), skyscraperMaterial,
+            new Vector3(2, 18, 2));
+        const buildingVisualization11 = new Skyscraper(this, false, new CANNON.Vec3(-2, 9, 0), skyscraperMaterial,
+            new Vector3(3, 18, 3));
 
         // creating particle system
         const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
@@ -203,7 +222,8 @@ class GameScene extends Scene {
             1
         );
 
-        this.add(land, player, lights, water, simpleBuilding, buildingVisualization);
+        this.add(land, player, lights, water, 
+            buildingVisualization, buildingVisualization2, buildingVisualization3);
     }
     // ...
 }
