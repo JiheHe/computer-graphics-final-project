@@ -161,33 +161,76 @@ class GameScene extends Scene {
 
     // Contains the intializers for all the scenes. Do scene setups here.
     initializeTestingScene() { // this is a testing scene.
-        // Set background to a nice color
-        this.background = new Color(0x7ec0ee);
+        // // Set background to a nice color
+        // this.background = new Color(0x7ec0ee);
         
-        // Set number of numbers player is expected to survive in this scene
-        this.numSecondsToSurvive = 60; 
+        // // Set number of numbers player is expected to survive in this scene
+        // this.numSecondsToSurvive = 60; 
 
-        // Create all the materials. // The material properties of the object: {how much object slides, how much object bounces on contact} 
-        let characterMaterial = new CANNON.Material({ friction: 0.001, restitution: 0.3 }); 
-        let landMaterial = new CANNON.Material({friction: 0.6, restitution: 0.2 }); 
-        let skyscraperMaterial = new CANNON.Material({friction: 1, restitution: 0.1}); 
+        // // Create all the materials. // The material properties of the object: {how much object slides, how much object bounces on contact} 
+        // let characterMaterial = new CANNON.Material({ friction: 0.001, restitution: 0.3 }); 
+        // let landMaterial = new CANNON.Material({friction: 0.6, restitution: 0.2 }); 
+        // let skyscraperMaterial = new CANNON.Material({friction: 1, restitution: 0.1}); 
 
-        // Create contact materials, i.e. a way to define the interaction properties between two materials when they come into contact. Same param.
-        // const characterBuildingContactMaterial = new CANNON.ContactMaterial(characterMaterial, skyscraperMaterial, {friction: 0.5, restitution: 0.6});
-        // this.state.world.addContactMaterial(characterBuildingContactMaterial);  // doesn't feel the effect for this one rn...
+        // // Create contact materials, i.e. a way to define the interaction properties between two materials when they come into contact. Same param.
+        // // const characterBuildingContactMaterial = new CANNON.ContactMaterial(characterMaterial, skyscraperMaterial, {friction: 0.5, restitution: 0.6});
+        // // this.state.world.addContactMaterial(characterBuildingContactMaterial);  // doesn't feel the effect for this one rn...
 
-        // Add meshes to scene (CONVENTION: use this.player = player after)
-        const player = new Player(this, new CANNON.Vec3(5, 1, 5), characterMaterial); // the player; can specify its starting position
-        this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
-        const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
-            {wallHeight: 5, wallTurnOffIndexList: [19, 8], isVisible: true});  // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
-        const lights = new BasicLights(); // the lighting, can prob make more classes etc.
-        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
-        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
+        // // Add meshes to scene (CONVENTION: use this.player = player after)
+        // const player = new Player(this, new CANNON.Vec3(5, 1, 5), characterMaterial); // the player; can specify its starting position
+        // this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
+        // const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
+        //     {wallHeight: 5, wallTurnOffIndexList: [19, 8], isVisible: true});  // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
+        // const lights = new BasicLights(); // the lighting, can prob make more classes etc.
+        // const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
+        // const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
 
-        this.add(simpleBuilding, land, player, lights, buildingVisualization);
+        // this.add(simpleBuilding, land, player, lights, buildingVisualization);
+
+        this.background = new Color(0xFFC3A0);
+
+        this.numSecondsToSurvive = 60;
+        
+        let characterMaterial = new CANNON.Material({friction: 0.001, restitution: 0.3});
+        let landMaterial = new CANNON.Material({friction: 0.8, restitution: 0.2});
+        let skyscraperMaterial = new CANNON.Material({friction: 1, restitution: 0.1});
+
+        const player = new Player(this, new CANNON.Vec3(-5, 15, 5), characterMaterial);
+        this.player = player;
+        const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial,
+            {wallHeight: 1, wallTurnOffIndexList: [19, 8], isVisible: true});
+        const land2 = new Land(this, new CANNON.Vec3(-10, 10, 0), landMaterial,
+            {wallHeight: 1, wallTurnOffIndexList: [19, 8], isVisible: true});
+        const land3 = new Land(this, new CANNON.Vec3(4, 5, 12), landMaterial,
+            {wallHeight: 1, wallTurnOffIndexList: [19, 8], isVisible: true});
+        const lights = new BasicLights();
+        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(-8, 10, 0), skyscraperMaterial);
+        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial);
+        const smallBuilding = new Skyscraper(this, true, new CANNON.Vec3(4, 15, 12), skyscraperMaterial);
+
+        this.add(simpleBuilding, smallBuilding, land, land2, land3, player, lights, buildingVisualization);
     }
     // ...
+
+    // initializeScene() {
+    //     this.background = new Color(0xFFC3A0);
+
+    //     this.numSecondsToSurvive = 60;
+        
+    //     let characterMaterial = new CANNON.Material({friction: 0.001, restitution: 0.3});
+    //     let landMaterial = new CANNON.Material({friction: 0.8, restitution: 0.2});
+
+    //     const player = new Player(this, new CANNON.Vec3(5, 1, 5), characterMaterial);
+    //     this.player = player;
+    //     const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial,
+    //         {wallHeight: 2, wallTurnOffIndexList: [19, 8], isVisible: true});
+    //     const land2 = new Land(this, new CANNON.Vec3(1, 10, 1), landMaterial,
+    //         {wallHeight: 2, wallTurnOffIndexList: [19, 8], isVisible: true});
+    //     const lights = new BasicLights();
+    //     const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial);
+
+    //     this.add(simpleBuilding, land, land2, player, lights, buildingVisualization);
+    // }
 
 }
 
