@@ -27,18 +27,24 @@ function createBoxColliderMesh(landBody) { // A helper function for visualizing 
     return mesh;
 }
 
+function randomInclusive(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 // IMPORTANT: We are going to assume the base of the land is essentially/strictly a box with NO out of boundary reach, so it's up to the user 
 // to input correctly "tiled" land meshes for us to work with.
 
 class Land extends Group {
-    constructor(parent, startingPos, material, boundaryWallParams,
-        mass = 0, collisionFilterGroup = -1, collisionFilterMask = -1, linearDamping = 0, angularDamping = 0, fixedRotation = true) { // heuristical
+    constructor(parent, startingPos, materiaL, boundaryWallParams, riserLandY,
+        mass = 0, collisionFilterGroup = 0b00010, collisionFilterMask = -1, linearDamping = 0, angularDamping = 0, fixedRotation = true) { // heuristical
         // Call parent Group() constructor
         super();
 
         const loader = new GLTFLoader();
 
         this.name = 'land';
+        this.riserLandY = riserLandY;
+        this.parentObj = parent;
 
         // Init state, variable specific to this object. (TODO: tune them later)
         this.state = {
@@ -47,14 +53,57 @@ class Land extends Group {
 
         loader.load(MODEL, (gltf) => {
             // Initialize physical properties of each land part in the file, following the convention
-            this.traverseAndInitPieces(parent, gltf.scene.children, startingPos, boundaryWallParams, mass, material, collisionFilterGroup, collisionFilterMask, linearDamping, angularDamping, fixedRotation);
+            this.traverseAndInitPieces(parent, gltf.scene.children, startingPos, boundaryWallParams, mass, materiaL, collisionFilterGroup, collisionFilterMask, linearDamping, angularDamping, fixedRotation);
             // Visualize the whole scene, since all landshapes are static.
             this.add(gltf.scene);
 
             // Update Three.js object position to match Cannon.js body position (Two different systems)
             this.position.copy(startingPos); // this.body.position. Since the shape is static, no need for constant update. Should be 1 to 1 coord ratio.
             this.position.add(this.state.colliderOffset);
+
+
+
+
+            // Spawn in sea level riser box (too lazy to do a helper)
+            const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
+            bufferGeometry.computeBoundingBox();
+            const boundingBox = bufferGeometry.boundingBox;
+            // physical
+            const shape = new CANNON.Box(new CANNON.Vec3((boundingBox.max.x - boundingBox.min.x) / 2, 0.25, (boundingBox.max.z - boundingBox.min.z) / 2));
+            const body = new CANNON.Body({  // invisible collider properties
+                mass: 0,  // static
+                shape: shape,
+                material: new CANNON.Material({friction: 0.5, restitution: 0.5}),
+                position: new CANNON.Vec3(startingPos.x, riserLandY.start, startingPos.z),
+                collisionFilterGroup: 0b100000, 
+                collisionFilterMask: 0b010001, // Only collides with player and water particles
+            });
+            body.updateMassProperties(); // Need to call this after setting up the parameters.
+            parent.bodyIDToString[body.id] = "SeaLevel";
+            parent.state.world.addBody(body);
+            // visual
+            const geometry = new BoxGeometry(
+                (boundingBox.max.x - boundingBox.min.x), // don't forget to *2 since half-size
+                0.25 * 2,
+                (boundingBox.max.z - boundingBox.min.z)
+            );
+            const material = new MeshBasicMaterial({
+                color: 0x0000ff,
+                transparent: true,
+                opacity: 1,
+            });
+            const mesh = new Mesh(geometry, material);
+            mesh.position.copy(body.position);
+            mesh.quaternion.copy(body.quaternion);
+            parent.add(mesh);
+            this.landRiser = {mesh, body};
+
+            // Add a collision event listener to the building's MAIN physics body
+            body.addEventListener("collide", this.handleCollision.bind(this));
         });
+
+        // Add self to parent's update list
+        parent.addToUpdateList(this);
     }
 
     // Convention: When given a gltf scene, the initial children objects ALL represent the land parts. (make sure to not export other stuff)
@@ -99,6 +148,25 @@ class Land extends Group {
         // Spawn in the tile contour boundary collider. CONVENTION: first child obj (Can twerk to check all childObj). Also wall thickness of 0.1 is enough.
         createWallCollidersAndVisualize(childObjs[0], boundaryWallParams.wallHeight, parent, boundaryWallParams.wallTurnOffIndexList, 
             0.1, boundaryWallParams.isVisible); // FOR TESTING ONLY
+    }
+
+    handleCollision(event) { // the function executed when a collision happens between something and the sea floor riser
+        if (this.parentObj.bodyIDToString[event.contact.bj.id] == "Player" || this.parentObj.bodyIDToString[event.contact.bi.id] == "Player") { // damage the player (touching seafloor) 
+            this.parentObj.player.loseHealth(10);
+            event.contact.bj.applyForce(new CANNON.Vec3(randomInclusive(0, 100), 1000, randomInclusive(0, 100)), event.contact.bj.position); // for retriggering
+        }
+
+        if (this.parentObj.bodyIDToString[event.contact.bi.id] == "WaterParticle" ) { // distorts the water a bit
+            event.contact.bi.applyForce(new CANNON.Vec3(randomInclusive(0, 100), randomInclusive(150, 250), randomInclusive(0, 100)), event.contact.bi.position);
+        }
+    }
+
+    update() {
+        if (this.landRiser) { // if exists, then rise land from start to end proprotional to current time elapsed.
+            let timeRatio = this.parentObj.gameTimer.timeElapsedInSeconds() / this.parentObj.numSecondsToSurvive;
+            this.landRiser.body.position.y = this.riserLandY.start + (this.riserLandY.end - this.riserLandY.start) * timeRatio;
+            this.landRiser.mesh.position.copy(this.landRiser.body.position);
+        }
     }
 
     /*initPhysics(parent, gltf, startingPos, material) { // obj file can directly pass in obj as parameter.
@@ -147,7 +215,7 @@ class WallCollider {
             material: new CANNON.Material({friction: 1, restitution: 1}),
             position: position,
             quaternion: quaternion,
-            collisionFilterGroup: -1, // None
+            collisionFilterGroup: 0b00100, // None
             collisionFilterMask: -1, // None
         });
         body.updateMassProperties(); // Need to call this after setting up the parameters.

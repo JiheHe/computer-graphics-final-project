@@ -185,22 +185,23 @@ class GameScene extends Scene {
         const player = new Player(this, new CANNON.Vec3(6, 1, 6), characterMaterial); // the player; can specify its starting position
         this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
         const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
-            {wallHeight: 5000, wallTurnOffIndexList: [], isVisible: true});  // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
+            {wallHeight: 5000, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
+            {start: -1, end: 10}); // start and end Y value of the rising platform that simulates rising tide  
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
-        // const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
-        // const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
+        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
+        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
 
         // creating particle system
         const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
         const water = new Water(
             this,                       // passing in the parent class
             new CANNON.Vec3(0, 3, 0),   // starting position of stream of water
-            125,                        // number of particles
+            100,                        // number of particles
             waterMaterial,              // 
             1
         );
 
-        this.add(land, player, lights, water);
+        this.add(land, player, lights, water, simpleBuilding, buildingVisualization);
     }
     // ...
 }

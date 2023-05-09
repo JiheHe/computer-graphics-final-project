@@ -46,6 +46,7 @@ class Player extends Group {
 
         // Player's health, for gameflow.
         this.health = 100;
+        this.parentObj = parent;
 
         // Load object
         const loader = new GLTFLoader();
@@ -79,7 +80,7 @@ class Player extends Group {
             linearDamping: 0.1, // might be useless since kinematics now... // A factor that reduces the object's linear velocity over time, simulating friction or air resistence. 
             fixedRotation: true, // When true, disables forced rotation due to collision
             position: startingPos, // The starting position of the object in the physics world.
-            collisionFilterGroup: -1,
+            collisionFilterGroup: 0b00001,
             collisionFilterMask: -1,
         });
         this.body.updateMassProperties(); // Need to call this after setting up the parameters.
@@ -343,8 +344,15 @@ class Player extends Group {
         // console.log("Three.js visual object position:", this.position);
     }
 
-    loseHealth(amt = 1) { // player loses health... called for example by collision event between water and player
-        this.health -= amt;
+    loseHealth(amt = 1, loseHpCooldown = 1) { // player loses health... called for example by collision event between water and player
+        if (!this.lastLoseHealthAt) {
+            this.health -= amt;
+            this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+        }
+        else if (this.parentObj.gameTimer.timeElapsedInSeconds() - this.lastLoseHealthAt >= loseHpCooldown) {
+            this.health -= amt;
+            this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+        }
     }
 }
 

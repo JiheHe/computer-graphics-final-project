@@ -93,7 +93,7 @@ export function mergeVerticesAndFaces(submeshes) { // given a list of meshes, me
 
 class Building extends Group {
   constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, material, 
-    linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) { // dims is a vec3
+    linearDamping, angularDamping, fixedRotation, collisionFilterGroup = 0b01000, collisionFilterMask = -1) { // dims is a vec3
     // Call parent Group() constructor
     super();
 
@@ -350,10 +350,10 @@ class Building extends Group {
 
 class Skyscraper extends Building { // An example of how to make a building type
   constructor(parent, useModel, startingPos, buildingMaterial, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 100,
-    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false, collisionFilterGroup = -1, collisionFilterMask = -1) {
+    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false) {
 
     super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, buildingMaterial, 
-      linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+      linearDamping, angularDamping, fixedRotation);
   }
 }
 
