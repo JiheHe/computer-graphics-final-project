@@ -3,9 +3,9 @@ import * as CANNON from 'cannon-es';
 import { Group } from 'three'
 
 class Water extends Group {
-
     constructor (
-        parent, startingPosition, numberOfParticles, waterMaterial, radius
+        parent, startingPosition, numberOfParticles, waterMaterial, radius,
+        // adding physics parameters
     ) {
         super(); // inherit parent class Group properties
 
