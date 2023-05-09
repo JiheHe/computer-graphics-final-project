@@ -79,6 +79,8 @@ class Player extends Group {
             linearDamping: 0.1, // might be useless since kinematics now... // A factor that reduces the object's linear velocity over time, simulating friction or air resistence. 
             fixedRotation: true, // When true, disables forced rotation due to collision
             position: startingPos, // The starting position of the object in the physics world.
+            collisionFilterGroup: -1,
+            collisionFilterMask: -1,
         });
         this.body.updateMassProperties(); // Need to call this after setting up the parameters.
         parent.bodyIDToString[this.body.id] = "Player";

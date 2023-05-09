@@ -1,6 +1,8 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es';
 import { Group } from 'three'
+import { MarchingCubes } from './MarchingCubes.js';
+
 
 // parameters for the Smoothed-Particle Hydrodynamics (SPH) simulation
 function SmoothedParticleHydrodynamics(particles, h, restDensity, viscosity) {
@@ -55,10 +57,6 @@ function SmoothedParticleHydrodynamics(particles, h, restDensity, viscosity) {
     }
 }
 
-function applyMarchingCubesAlgorithm(particles) {
-
-}
-
 // O(n^2) algorithm for now, but we can improve later using something like this
 function getNearestNeighbors(particle, particles, searchRadius) {
     // an array to hold the neighbors
@@ -90,6 +88,15 @@ class Water extends Group {
         // adding physics parameters
     ) {
         super(); // inherit parent class Group properties
+
+        // Marching cubes attempt
+        /*const resolution = 32; // Adjust the resolution based on your needs
+        const material = new THREE.MeshBasicMaterial({ color: 0x0032ff, opacity: 0.5, transparent: true });
+        this.marchingCubes = new MarchingCubes(resolution, material, true, true);
+        // this.marchingCubes.position.set(0, 3, 0);
+        this.marchingCubes.scale.set(1, 1, 1); // Adjust scale values based on your needs
+        // this.marchingCubes.field = sphereField;
+        parent.add(this.marchingCubes);*/
 
         this.particles = [];
         this.numberOfParticles = numberOfParticles;
@@ -155,6 +162,8 @@ class Water extends Group {
                 linearDamping: 0,
                 fixedRotation: false, // disables forced rotation due to collision
                 position: randomStartingPosition, // starting position of the object in the physics world
+                collisionFilterGroup: -1,
+                collisionFilterMask: -1,
             });
             pbody.updateMassProperties(); // Need to call this after setting up the parameter
             parent.bodyIDToString[pbody.id] = "WaterParticle";
@@ -171,9 +180,9 @@ class Water extends Group {
         }
 
         // adding all particles to the parent
-        for (let i = 0; i < numberOfParticles; i++) {
+         for (let i = 0; i < numberOfParticles; i++) {
             parent.add(this.particles[i].particle)
-        }
+         }
 
         // Add self to parent's update list
         parent.addToUpdateList(this);
@@ -191,11 +200,33 @@ class Water extends Group {
     update() {
         const pbodyList = this.particles.map((item) => item.pbody)
         SmoothedParticleHydrodynamics(pbodyList, 0.1, 1000, 0.1)
-        for (let i = 0; i < this.numberOfParticles; i++) {
+         for (let i = 0; i < this.numberOfParticles; i++) {
             let p = this.particles[i]
-            p.particle.position.copy(p.pbody.position);
+           p.particle.position.copy(p.pbody.position);
+         }
+        
+        // Marching Cube Efforts
+        // this.updateScalarField();
+        // this.updateMesh();
+    }
+
+    updateScalarField() {
+        this.marchingCubes.reset();
+      
+        const strength = 12; // adjust this value to control the size of the ball
+        const subtract = 5; // positive for a solid ball, negative for a hollow ball
+        const colors = null;
+      
+        for (const { pbody } of this.particles) {
+          const position = pbody.position;
+          this.marchingCubes.addBall(position.x, position.y, position.z, strength, subtract, colors);
         }
     }
+
+    updateMesh() {
+        this.marchingCubes.update();
+    }
+
 }
 
 export default Water;
