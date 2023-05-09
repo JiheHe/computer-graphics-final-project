@@ -1,5 +1,5 @@
 import * as Dat from 'dat.gui';
-import { Scene, Color } from 'three';
+import { Scene, Color, Vector3 } from 'three';
 import { Land, Player } from 'objects';
 import { Skyscraper } from 'objects';
 import { BasicLights } from 'lights';
@@ -190,7 +190,8 @@ class GameScene extends Scene {
             {start: -1, end: 10}); // start and end Y value of the rising platform that simulates rising tide  
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
         const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
-        // const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
+        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial,
+            new Vector3(5, 5, 5)); // an example of size/loc visualization
 
         // creating particle system
         const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
@@ -202,7 +203,7 @@ class GameScene extends Scene {
             1
         );
 
-        this.add(land, player, lights, water, simpleBuilding);
+        this.add(land, player, lights, water, simpleBuilding, buildingVisualization);
     }
     // ...
 }
