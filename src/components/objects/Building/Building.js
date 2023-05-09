@@ -92,7 +92,7 @@ export function mergeVerticesAndFaces(submeshes) { // given a list of meshes, me
 }
 
 class Building extends Group {
-  constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, material, 
+  constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, material, breakThreshold = 100,
     linearDamping, angularDamping, fixedRotation, collisionFilterGroup = 0b01000, collisionFilterMask = -1) { // dims is a vec3
     // Call parent Group() constructor
     super();
@@ -100,7 +100,7 @@ class Building extends Group {
     // Init state, variable specific to this object. (TODO: tune them later)
     this.state = {
       colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
-      breakThreshold: 100, // Set the force threshold for breaking the building // Treat this as buildling's HP
+      breakThreshold: breakThreshold, // Set the force threshold for breaking the building // Treat this as buildling's HP
       fracturedPieces: [], // Store fractured pieces' physics bodies and objects
     }
 
@@ -378,7 +378,7 @@ class Skyscraper extends Building { // An example of how to make a building type
   constructor(parent, useModel, startingPos, buildingMaterial, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 100,
     linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false) {
 
-    super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, buildingMaterial, 
+    super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, buildingMaterial, 100,
       linearDamping, angularDamping, fixedRotation);
   }
 }
