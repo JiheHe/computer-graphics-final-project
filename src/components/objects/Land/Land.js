@@ -99,7 +99,10 @@ class Land extends Group {
             this.landRiser = {mesh, body};
 
             // Add a collision event listener to the building's MAIN physics body
-            body.addEventListener("collide", this.handleCollision.bind(this));
+            // this.objectInContact = [];
+            // parent.state.world.addEventListener("beginContact", this.handleContact.bind(this));
+            // parent.state.world.addEventListener("endContact", this.handleDetact.bind(this));
+            body.addEventListener("collide", this.handleContact.bind(this));
         });
 
         // Add self to parent's update list
@@ -150,16 +153,39 @@ class Land extends Group {
             0.1, boundaryWallParams.isVisible); // FOR TESTING ONLY
     }
 
-    handleCollision(event) { // the function executed when a collision happens between something and the sea floor riser
-        if (this.parentObj.bodyIDToString[event.contact.bj.id] == "Player" || this.parentObj.bodyIDToString[event.contact.bi.id] == "Player") { // damage the player (touching seafloor) 
+    handleContact(event) { // the function executed when a collision happens between something and the sea floor riser
+        /*let { bodyA, bodyB } = event;
+        if (this.parentObj.bodyIDToString[bodyA.id] == "SeaLevel" || this.parentObj.bodyIDToString[bodyB.id] == "SeaLevel") 
+            this.objectInContact.push(this.parentObj.bodyIDToString[bodyA.id] == "SeaLevel" ? bodyB : bodyA);*/
+
+        let playerBody = null, waterParticleBody = null;
+        if (this.parentObj.bodyIDToString[event.contact.bi.id] == "Player") playerBody = event.contact.bi;
+        else if (this.parentObj.bodyIDToString[event.contact.bj.id] == "Player") playerBody = event.contact.bj;
+        else if (this.parentObj.bodyIDToString[event.contact.bi.id] == "WaterParticle") waterParticleBody = event.contact.bi;
+        else if (this.parentObj.bodyIDToString[event.contact.bj.id] == "WaterParticle") waterParticleBody = event.contact.bj;
+
+        if (playerBody != null) { // damage the player (touching seafloor) 
             this.parentObj.player.loseHealth(10);
-            event.contact.bj.applyForce(new CANNON.Vec3(randomInclusive(0, 100), 1000, randomInclusive(0, 100)), event.contact.bj.position); // for retriggering
+            playerBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), 1000, randomInclusive(0, 100)), playerBody.position); // for retriggering
         }
 
-        if (this.parentObj.bodyIDToString[event.contact.bi.id] == "WaterParticle" ) { // distorts the water a bit
-            event.contact.bi.applyForce(new CANNON.Vec3(randomInclusive(0, 100), randomInclusive(150, 250), randomInclusive(0, 100)), event.contact.bi.position);
+        if (waterParticleBody != null) { // distorts the water a bit
+            waterParticleBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), randomInclusive(150, 250), randomInclusive(0, 100)), waterParticleBody.position);
+            if (waterParticleBody.collisionFilterMask == -1) waterParticleBody.collisionFilterMask = 0b101111;
         }
     }
+
+    /*handleDetact(event) {
+        let { bodyA, bodyB } = event;
+        let index;
+        if (this.parentObj.bodyIDToString[bodyA.id] == "SeaLevel")
+            index = this.objectInContact.indexOf(bodyB); // get the index of the element
+        else if (this.parentObj.bodyIDToString[bodyB.id] == "SeaLevel")
+            index = this.objectInContact.indexOf(bodyA); // get the index of the element
+        if (index !== -1) 
+            this.objectInContact.splice(index, 1); // remove the element at the specified index
+            // this.objectInContact.remove(this.parentObj.bodyIDToString[bodyA.id] == "SeaLevel" ? bodyB : bodyA);
+    }*/
 
     update() {
         if (this.landRiser) { // if exists, then rise land from start to end proprotional to current time elapsed.
@@ -167,6 +193,21 @@ class Land extends Group {
             this.landRiser.body.position.y = this.riserLandY.start + (this.riserLandY.end - this.riserLandY.start) * timeRatio;
             this.landRiser.mesh.position.copy(this.landRiser.body.position);
         }
+
+        /*console.log(this.objectInContact);
+        for (let i = 0; i < this.objectInContact.length; i++) {
+            let currentBody = this.objectInContact[i];
+            if (currentBody) {
+                if (currentBody.id == "Player") { // damage the player (touching seafloor)
+                    this.parentObj.player.loseHealth(10);
+                    // currentBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), 1000, randomInclusive(0, 100)), playerBody.position); // for retriggering
+                }
+                else if (currentBody.id == "WaterParticle") { // distorts the water a bit
+                    currentBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), randomInclusive(150, 250), randomInclusive(0, 100)), currentBody.position);
+                    if (currentBody.collisionFilterMask == -1) currentBody.collisionFilterMask = 0b101111;
+                }
+            }           
+        }*/
     }
 
     /*initPhysics(parent, gltf, startingPos, material) { // obj file can directly pass in obj as parameter.

@@ -65,6 +65,7 @@ class GameScene extends Scene {
         // Load in the text elements. Variable should've been set in scene initialization
         this.sharedState.timerText.textContent = "Time Remaining: " + this.numSecondsToSurvive;
         this.sharedState.healthText.textContent = "Health: " + this.player.health;
+        this.sharedState.gameMessage.textContent = ""; // in seconds
     }
 
     startGameplay() {
@@ -103,12 +104,12 @@ class GameScene extends Scene {
     }
 
     stagePassed() { // the user survives the timer!
-        console.log("You survived!");
+        this.sharedState.gameMessage.textContent = "You Survived!"; // in seconds
         this.pauseResumeGameplay(); // for now
     }
 
     stageFailed() { // the user ran out of health before timer ends.
-        console.log("You failed");
+        this.sharedState.gameMessage.textContent = "You Failed!"; // in seconds
         this.pauseResumeGameplay(); // for now
     }
 

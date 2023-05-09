@@ -163,7 +163,7 @@ class Water extends Group {
                 fixedRotation: false, // disables forced rotation due to collision
                 position: randomStartingPosition, // starting position of the object in the physics world
                 collisionFilterGroup: 0b10000,
-                collisionFilterMask: 0b101111, // Don't collide into each other.
+                collisionFilterMask: -1, // 0b101111, // Don't collide into each other.
             });
             pbody.updateMassProperties(); // Need to call this after setting up the parameter
             parent.bodyIDToString[pbody.id] = "WaterParticle";
