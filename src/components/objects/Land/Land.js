@@ -138,7 +138,7 @@ class Land extends Group {
 
 
 class WallCollider {
-    constructor(position, quaternion, dimensions, world) {
+    constructor(position, quaternion, dimensions, parent) {
         // Initialize your wall collider with the given position, rotation, and dimensions
         const shape = new CANNON.Box(new CANNON.Vec3(dimensions.x / 2, dimensions.y / 2, dimensions.z / 2));
         const body = new CANNON.Body({  // invisible collider properties
@@ -150,12 +150,14 @@ class WallCollider {
             collisionFilterGroup: -1, // None
             collisionFilterMask: -1, // None
         });
+        body.updateMassProperties(); // Need to call this after setting up the parameters.
         this.collider = body;
+        parent.bodyIDToString[body.id] = "Wall";
 
         this.dimensions = dimensions;
         this.position = position;
         this.quaternion = quaternion;
-        this.world = world;
+        this.world = parent.state.world;
     }
 
     addToWorld() {
@@ -178,7 +180,7 @@ class WallCollider {
 // The main function that adds a wall collider to every edge of this convention-following landscape tile.
 function createWallCollidersAndVisualize(mesh, height, parentScene, turnOffWallIndexList = [], thickness = 0.1, visualize = false) {
     // Prep all the collider objects
-    const wallColliders = createWallColliders(mesh, height, parentScene.state.world, thickness);
+    const wallColliders = createWallColliders(mesh, height, parentScene, thickness);
 
     // Sort the indices in descending order
     turnOffWallIndexList.sort((a, b) => b - a);
@@ -202,7 +204,7 @@ function createWallCollidersAndVisualize(mesh, height, parentScene, turnOffWallI
 }
 
 // Creates a WallCollider object given the parameters.
-function createWallColliders(mesh, height, world, thickness) {
+function createWallColliders(mesh, height, parentScene, thickness) {
     // 1. Identify the bottom face vertices of the mesh
     // 2. Find the edges of the bottom face
     const edges = extractBottomFaceEdges(mesh); // counter-clockwise traversal of contour.
@@ -233,7 +235,7 @@ function createWallColliders(mesh, height, world, thickness) {
         const dimensions = new Vector3(edgeLength, height, thickness);
         const position = new CANNON.Vec3(midpoint.x, midpoint.y, midpoint.z);
 
-        return new WallCollider(position, quaternion, dimensions, world);
+        return new WallCollider(position, quaternion, dimensions, parentScene);
     });
   
     return wallColliders;

@@ -196,7 +196,7 @@ class Building extends Group {
       collisionFilterMask: collisionFilterMask,
     });
     this.body.updateMassProperties(); // Need to call this after setting up the parameters.
-
+    parent.bodyIDToString[this.body.id] = "Building";
     // For calculating indiv part mass % based on volume.
     this.mainMass = mass;
     this.mainVolume = this.shape.volume();
@@ -242,6 +242,7 @@ class Building extends Group {
       collisionFilterMask: collisionFilterMask,
     });
     body.updateMassProperties();
+    parent.bodyIDToString[body.id] = "BuildingPiece";
 
     // Add the Cannon.js body to the world
     parent.state.world.addBody(body); // Need to call this after setting up the parameters.

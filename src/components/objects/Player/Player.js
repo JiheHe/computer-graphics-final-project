@@ -81,6 +81,7 @@ class Player extends Group {
             position: startingPos, // The starting position of the object in the physics world.
         });
         this.body.updateMassProperties(); // Need to call this after setting up the parameters.
+        parent.bodyIDToString[this.body.id] = "Player";
         
         this.body.addEventListener('collide', (event) => { // subscribe to "onCollision" event // TODO: type classification later.
             // Check if the collision normal is pointing upwards (character is on the ground)
