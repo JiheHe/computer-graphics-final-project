@@ -100,12 +100,13 @@ class Building extends Group {
     // Init state, variable specific to this object. (TODO: tune them later)
     this.state = {
       colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
-      breakThreshold: 1000, // Set the force threshold for breaking the building
+      breakThreshold: 100, // Set the force threshold for breaking the building // Treat this as buildling's HP
       fracturedPieces: [], // Store fractured pieces' physics bodies and objects
     }
 
     this.name = name;
     this.parentObj = parent;
+    this.health = this.state.breakThreshold;
 
     if (modelUrl) { // if a model is supplied
       // Load object
@@ -255,7 +256,21 @@ class Building extends Group {
   }
 
   handleCollision(event) { // the function executed when a collision happens between something and the main physical buildling.
-    // Get the impact velocity along the normal
+    let waterParticleBody = null;
+    if (this.parent.bodyIDToString[event.contact.bi.id] == "WaterParticle") waterParticleBody = event.contact.bi;
+    else if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle") waterParticleBody = event.contact.bj;
+
+    if (waterParticleBody != null) { // damage the player (touching seafloor) 
+      this.loseHealth(10);
+    }
+
+    console.log(this.health);
+    if (this.health <= 0) {
+      this.fractured = true;
+    }
+
+    // force method, archived for now since we are using water particle hp deduction system.
+    /*// Get the impact velocity along the normal
     const impactVelocityAlongNormal = event.contact.getImpactVelocityAlongNormal();
   
     // Calculate the impact force along the normal by multiplying the impact velocity along the normal by the mass of the colliding body
@@ -266,7 +281,7 @@ class Building extends Group {
     if (impactForce > this.state.breakThreshold) {
       // console.log("Collision happened");
       this.fractured = true;
-    }
+    }*/
   }
 
   breakBuilding(parent) {
@@ -326,6 +341,17 @@ class Building extends Group {
       this.mesh.position.copy(this.body.position);
       this.mesh.position.add(this.state.colliderOffset);
       this.mesh.quaternion.copy(this.body.quaternion);
+    }
+  }
+
+  loseHealth(amt = 1, loseHpCooldown = 1) { // building loses health... called for example by collision event between building and water
+    if (!this.lastLoseHealthAt) {
+        this.health -= amt;
+        this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+    }
+    else if (this.parentObj.gameTimer.timeElapsedInSeconds() - this.lastLoseHealthAt >= loseHpCooldown) {
+        this.health -= amt;
+        this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
     }
   }
 }

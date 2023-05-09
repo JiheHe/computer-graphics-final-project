@@ -196,7 +196,7 @@ class GameScene extends Scene {
         const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
         const water = new Water(
             this,                       // passing in the parent class
-            new CANNON.Vec3(0, 3, 0),   // starting position of stream of water
+            new CANNON.Vec3(0, 3, 6),   // starting position of stream of water
             100,                        // number of particles
             waterMaterial,              // 
             1

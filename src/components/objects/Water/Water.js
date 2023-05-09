@@ -189,11 +189,12 @@ class Water extends Group {
     }
 
     handleCollision(event) { // the function executed when a collision happens between something and the main physical buildling.
-        if (this.parent.bodyIDToString[event.contact.bj.id] == "Land") {
-            // event.contact.bi.applyForce(new CANNON.Vec3(0, 10, 0), event.contact.bi.position);
-        }
+        let playerBody = null;
+        if (this.parent.bodyIDToString[event.contact.bi.id] == "Player") playerBody = event.contact.bi;
+        else if (this.parent.bodyIDToString[event.contact.bj.id] == "Player") playerBody = event.contact.bj;
 
-        if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle" ) {
+        if (playerBody != null) { // damage the player (touching seafloor) 
+            this.parent.player.loseHealth(1);
         }
     }
 
