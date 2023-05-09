@@ -192,7 +192,7 @@ class GameScene extends Scene {
 
         // creating particle system
         const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
-        const water = new Water(this, new CANNON.Vec3(5, 3, 0), 2, waterMaterial, 0.1);
+        const water = new Water(this, new CANNON.Vec3(5, 3, 0), 150, waterMaterial, 0.25);
 
         this.add(simpleBuilding, land, player, lights, buildingVisualization, water);
     }

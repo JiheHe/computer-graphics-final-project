@@ -16,7 +16,7 @@ class Water extends Group {
         // creating all of the particles
         for (let i = 0; i < numberOfParticles; i++) {
             // making the sphere particles (visual)
-            const sphere = new THREE.SphereGeometry(radius);
+            const sphere = new THREE.SphereGeometry(radius); // remember to add more than 8 segments
             const material = new THREE.MeshBasicMaterial({
                 color: 0x0032ff,
                 opacity: 0.5,
@@ -25,6 +25,15 @@ class Water extends Group {
             // generating mesh of the particle
             const particle = new THREE.Mesh(sphere, material)
 
+            // generating a random starting position for each ball
+            const offsetX = (Math.random() * 2) - 1;   // Random number between -1 and 1
+            const offsetY = (Math.random() * 2) - 1;   // Random number between -1 and 1
+            const offsetZ = (Math.random() * 2) - 1;   // Random number between -1 and 1
+            const offsetVector = new CANNON.Vec3(offsetX, offsetY, offsetZ);
+
+            // Add the offset vector to your original vector
+            const randomStartingPosition = startingPosition.vadd(offsetVector);
+
             // making the sphere particles (physical)
             const pbody = new CANNON.Body({ // particle body
                 mass: 1,
@@ -32,7 +41,7 @@ class Water extends Group {
                 material: waterMaterial,
                 linearDamping: 0,
                 fixedRotation: false, // disables forced rotation due to collision
-                position: startingPosition, // starting position of the object in the physics world
+                position: randomStartingPosition, // starting position of the object in the physics world
             });
             pbody.updateMassProperties(); // Need to call this after setting up the parameter
             parent.bodyIDToString[pbody.id] = "WaterParticle";
@@ -58,15 +67,11 @@ class Water extends Group {
     }
 
     handleCollision(event) { // the function executed when a collision happens between something and the main physical buildling.
-        // Get the impact velocity along the normal
-        const impactVelocityAlongNormal = event.contact.getImpactVelocityAlongNormal();
-
         if (this.parent.bodyIDToString[event.contact.bj.id] == "Land") {
-            event.contact.bi.applyForce(new CANNON.Vec3(0, 10, 0), event.contact.bi.position);
+            // event.contact.bi.applyForce(new CANNON.Vec3(0, 10, 0), event.contact.bi.position);
         }
 
         if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle" ) {
-            console.log("works")
         }
     }
     
