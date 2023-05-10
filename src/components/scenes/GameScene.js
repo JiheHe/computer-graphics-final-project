@@ -1,10 +1,16 @@
 import * as Dat from 'dat.gui';
-import { Scene, Color, Vector3 } from 'three';
+import { Scene, Color, Vector3, CubeTextureLoader, Matrix4 } from 'three';
 import { Land, Player } from 'objects';
 import { Skyscraper, BuildingI } from 'objects';
 import { BasicLights } from 'lights';
 import * as CANNON from 'cannon-es'; // aliasing
 import { Water } from 'objects' // water particles
+import px1 from './px.jpg'
+import nx1 from './nx.jpg'
+import py1 from './py.jpg'
+import ny1 from './ny.jpg'
+import pz1 from './pz.jpg'
+import nz1 from './nz.jpg'
 
 // State machine states.
 const GAMESTATE_INGAME = 1;
@@ -227,8 +233,21 @@ class GameScene extends Scene {
 
     // Contains the intializers for all the scenes. Do scene setups here.
     initializeTestingScene() { // this is a testing scene.
+        const loader = new CubeTextureLoader();
+        const texture = loader.load([
+            px1,
+            nx1,
+            py1, // correct
+            ny1, // correct
+            pz1,
+            nz1
+        ]);
+        this.background = texture;
+
+        // this.rotation.y = 90 * Math.PI / 180; // Rotate 90 degrees
+
         // Set background to a nice color
-        this.background = new Color(0x7ec0ee);
+        // this.background = new Color(0x7ec0ee);
         
         // Set number of numbers player is expected to survive in this scene
         this.numSecondsToSurvive = 60; 
