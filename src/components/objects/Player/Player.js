@@ -39,13 +39,14 @@ class Player extends Group {
         this.state = {
             gui: parent.state.gui, // gui, useless at the moment. Can be used in the future for parameter tuning, or delete.
             moveSpeed: 5, // move speed of the player // force: 10
-            jumpHeight: 2, // jump height of the player // force: 500
+            jumpHeight: 2.5, // jump height of the player // force: 500
             isGrounded: false, // checks whether the character is on the ground.
             colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
         };
 
         // Player's health, for gameflow.
         this.health = 100;
+        this.parentObj = parent;
 
         // Load object
         const loader = new GLTFLoader();
@@ -55,7 +56,7 @@ class Player extends Group {
         });
 
         // Variables for kinematic movement and QoL updates
-        this.targetRotation = 0;
+        this.targetRotation = 50; // also starting rotation
         this.keyReleased = false;
         this.lastDirection = '';
 
@@ -74,13 +75,17 @@ class Player extends Group {
         // Set up Cannon.js physics
         this.body = new CANNON.Body({
             mass: 70, // The mass of the object in kg, this is the mass of standard human male
-            shape: new CANNON.Cylinder(0.5, 0.5, 2, 16), // The shape of the object's collision volume
+            shape: new CANNON.Cylinder(0.45, 0.45, 1.89, 12), // The shape of the object's collision volume
             material: material,
             linearDamping: 0.1, // might be useless since kinematics now... // A factor that reduces the object's linear velocity over time, simulating friction or air resistence. 
             fixedRotation: true, // When true, disables forced rotation due to collision
             position: startingPos, // The starting position of the object in the physics world.
+            quaternion: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -90 * (Math.PI / 180)),
+            collisionFilterGroup: 0b00001,
+            collisionFilterMask: -1,
         });
         this.body.updateMassProperties(); // Need to call this after setting up the parameters.
+        parent.bodyIDToString[this.body.id] = "Player";
         
         this.body.addEventListener('collide', (event) => { // subscribe to "onCollision" event // TODO: type classification later.
             // Check if the collision normal is pointing upwards (character is on the ground)
@@ -91,6 +96,7 @@ class Player extends Group {
 
         // Add body to the world (physics world)
         parent.state.world.addBody(this.body);
+        this.quaternion.copy(this.body.quaternion); // starting rotation
 
         // for debugging: visualizing collider
         /*this.colliderMesh = createCylinderColliderMesh(this.body);
@@ -340,8 +346,27 @@ class Player extends Group {
         // console.log("Three.js visual object position:", this.position);
     }
 
-    loseHealth(amt = 1) { // player loses health... called for example by collision event between water and player
-        this.health -= amt;
+    loseHealth(amt = 1, loseHpCooldown = 1) { // player loses health... called for example by collision event between water and player
+        if (!this.lastLoseHealthAt) {
+            this.health -= amt;
+            this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+        }
+        else if (this.parentObj.gameTimer.timeElapsedInSeconds() - this.lastLoseHealthAt >= loseHpCooldown) {
+            this.health -= amt;
+            this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+        }
+    }
+
+      // Just a different variable system.
+    loseHealthBig(amt = 1, loseHpCooldown = 1) { // building loses health... called for example by collision event between building and water
+        if (!this.lastLoseBigHealthAt) {
+            this.health -= amt;
+            this.lastLoseBigHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+        }
+        else if (this.parentObj.gameTimer.timeElapsedInSeconds() - this.lastLoseBigHealthAt >= loseHpCooldown) {
+            this.health -= amt;
+            this.lastLoseBigHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+        }
     }
 }
 

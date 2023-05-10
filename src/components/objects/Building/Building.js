@@ -5,6 +5,124 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
 import qh from 'quickhull3d'
 import SKYSCRAPER_MODEL from './skyscraper.gltf'; // import other buildling gltfs here. Make sure to follow the convention!
+// import the building models
+// TODO: only import the ones needed later! Use an array to specificy. Don't import all else slow. Just for testing 
+import BUILDING1 from './building1.gltf';
+import BUILDING2 from './building2.gltf';
+// import BUILDING3 from './building3.gltf';
+// import BUILDING4 from './building4.gltf';
+// import BUILDING5 from './building5.gltf';
+// import BUILDING6 from './building6.gltf';
+// import BUILDING7 from './building7.gltf';
+// import BUILDING8 from './building8.gltf';
+// import BUILDING9 from './building9.gltf';
+// import BUILDING10 from './building10.gltf';
+// import BUILDING11 from './building11.gltf';
+// import BUILDING12 from './building12.gltf';
+// import BUILDING13 from './building13.gltf';
+// import BUILDING14 from './building14.gltf';
+// import BUILDING15 from './building15.gltf';
+// import BUILDING16 from './building16.gltf';
+// import BUILDING17 from './building17.gltf';
+import BUILDING18 from './building18.gltf';
+// import BUILDING19 from './building19.gltf';
+import BUILDING20 from './building20.gltf';
+// import BUILDING21 from './building21.gltf';
+import BUILDING22 from './building22.gltf';
+import BUILDING23 from './building23.gltf';
+// import BUILDING24 from './building24.gltf';
+// import BUILDING25 from './building25.gltf';
+// import BUILDING26 from './building26.gltf';
+import BUILDING27 from './building27.gltf';
+// import BUILDING28 from './building28.gltf';
+import BUILDING29 from './building29.gltf';
+// import BUILDING30 from './building30.gltf';
+// import BUILDING31 from './building31.gltf';
+// import BUILDING32 from './building32.gltf';
+// import BUILDING33 from './building33.gltf';
+// import BUILDING34 from './building34.gltf';
+// import BUILDING35 from './building35.gltf';
+import BUILDING36 from './building36.gltf';
+// import BUILDING37 from './building37.gltf';
+// import BUILDING38 from './building38.gltf';
+// import BUILDING39 from './building39.gltf';
+// import BUILDING40 from './building40.gltf';
+// import BUILDING41 from './building41.gltf';
+// import BUILDING42 from './building42.gltf';
+import BUILDING43 from './building43.gltf';
+// import BUILDING44 from './building44.gltf';
+// import BUILDING45 from './building45.gltf';
+// import BUILDING46 from './building46.gltf';
+// import BUILDING47 from './building47.gltf';
+// import BUILDING48 from './building48.gltf';
+// import BUILDING49 from './building49.gltf';
+import BUILDING50 from './building50.gltf';
+// import BUILDING51 from './building51.gltf';
+// import BUILDING52 from './building52.gltf';
+// import BUILDING53 from './building53.gltf';
+// import BUILDING54 from './building54.gltf';
+// import BUILDING55 from './building55.gltf';
+// import BUILDING56 from './building56.gltf';
+const BUILDINGS = [ // MUST BE RANKED IN THE ORDER OF USAGE!!!!!!!!!!!!!!!
+  null, // Placeholder so array is 1-indexed
+  BUILDING1,
+  BUILDING2,
+  BUILDING18,
+  BUILDING23,
+  BUILDING43,
+  BUILDING50,
+  BUILDING22,
+  BUILDING29,
+  BUILDING36,
+  BUILDING27,
+  BUILDING20,
+  // BUILDING3,
+  // BUILDING4,
+  // BUILDING5,
+  // BUILDING6,
+  // BUILDING7,
+  // BUILDING8,
+  // BUILDING9,
+  // BUILDING10,
+  // BUILDING11,
+  // BUILDING12,
+  // BUILDING13,
+  // BUILDING14,
+  // BUILDING15,
+  // BUILDING16,
+  // BUILDING17,
+  // BUILDING19,
+  // BUILDING21,
+  // BUILDING24,
+  // BUILDING25,
+  // BUILDING26,
+  // BUILDING28,
+  // BUILDING30,
+  // BUILDING31,
+  // BUILDING32,
+  // BUILDING33,
+  // BUILDING34,
+  // BUILDING35,
+  // BUILDING37,
+  // BUILDING38,
+  // BUILDING39,
+  // BUILDING40,
+  // BUILDING41,
+  // BUILDING42,
+  // BUILDING44,
+  // BUILDING45,
+  // BUILDING46,
+  // BUILDING47,
+  // BUILDING48,
+  // BUILDING49,
+  // BUILDING51,
+  // BUILDING52,
+  // BUILDING53,
+  // BUILDING54,
+  // BUILDING55,
+  // BUILDING56,
+];
+
 
 export function createConvexPolyhedronFromGeometry(geometry, parent = null) { // a helper function that creates a cannon.js convex polyhedron for a better-fit collider
   let convexVertices = geometry.vertices;
@@ -92,32 +210,33 @@ export function mergeVerticesAndFaces(submeshes) { // given a list of meshes, me
 }
 
 class Building extends Group {
-  constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, material, 
-    linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) { // dims is a vec3
+  constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, material, breakThreshold = 100,
+    linearDamping, angularDamping, fixedRotation, collisionFilterGroup = 0b01000, collisionFilterMask = -1) { // dims is a vec3
     // Call parent Group() constructor
     super();
 
     // Init state, variable specific to this object. (TODO: tune them later)
     this.state = {
       colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
-      breakThreshold: 1000, // Set the force threshold for breaking the building
+      breakThreshold: breakThreshold, // Set the force threshold for breaking the building // Treat this as buildling's HP
       fracturedPieces: [], // Store fractured pieces' physics bodies and objects
     }
 
     this.name = name;
     this.parentObj = parent;
+    this.health = this.state.breakThreshold;
 
     if (modelUrl) { // if a model is supplied
       // Load object
       const loader = new GLTFLoader();
       loader.load(modelUrl, (gltf) => {
         // Cache each fractured piece in the file, following the convention
-        this.traverseAndDefinePieces(gltf.scene.children, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+        let mainBuilding = this.traverseAndDefinePieces(gltf.scene.children, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
         // Add the main piece (0th 'earliest' piece, following the convention) to the scene.
         // const dimensions = this.calculateModelDimensions(gltf.scene.children[0]); // just a bounding box dim, not as accurate but prob faster. Put dim back if too slow.
         this.initPhysics(parent, null, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
-        this.originalObj = gltf.scene.children[0]; // need to put it before the add, otherwise the address points to other stuff since:
-        this.add(gltf.scene.children[0]); // changes the hierarchy of the first child by moving it under the custom script; visualizes it
+        this.originalObj = mainBuilding; // need to put it before the add, otherwise the address points to other stuff since:
+        this.add(mainBuilding); // changes the hierarchy of the first child by moving it under the custom script; visualizes it
         this.fractured = false; // starts off intact
 
         // Add a collision event listener to the building's MAIN physics body
@@ -129,7 +248,7 @@ class Building extends Group {
       // visualizing the custom shape
       const geometry = new BoxGeometry(dims.x, dims.y, dims.z);
       const material = new MeshBasicMaterial({
-        color: 0x00ff00,
+        color: 0xff0000,
         transparent: true,
         opacity: 0.5,
       });
@@ -158,23 +277,32 @@ class Building extends Group {
   traverseAndDefinePieces(childObjs, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
     // Define the main piece (keeps track of all the meshes in the OG building)
     this.mainmeshes = [];
-    childObjs[0].traverse((child) => { 
-      if (child.isMesh) {
-        this.mainmeshes.push(child);
-      }
-    });
+    let mainBuilding = null;
+
     // Define the fractured pieces via caching
-    for (let i = 1; i < childObjs.length; i++) {
+    for (let i = 0; i < childObjs.length; i++) {
       let childObj = childObjs[i]; // current piece.
-      const submeshes = []; // meshes within this piece
-      childObj.traverse((child) => { // childObj is also included in the traversal. MAYBE???
-        if (child.isMesh) {
-          submeshes.push(child);
-        }
-      });
-      this.state.fracturedPieces.push(
-        {childObj, submeshes, startingPos, mass: 0, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
+      if (!childObj.name.includes("cell")) { // the one main piece, following the convention
+        mainBuilding = childObj;
+        childObj.traverse((child) => { 
+          if (child.isMesh) {
+            this.mainmeshes.push(child);
+          }
+        });
+      }
+      else {
+        const submeshes = []; // meshes within this piece
+        childObj.traverse((child) => { // childObj is also included in the traversal. MAYBE???
+          if (child.isMesh) {
+            submeshes.push(child);
+          }
+        });
+        this.state.fracturedPieces.push(
+          {childObj, submeshes, startingPos, mass: 0, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
+      }
     }
+
+    return mainBuilding;
   }
 
   initPhysics(parent, dimensions, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
@@ -188,7 +316,8 @@ class Building extends Group {
       mass: 0, // mass input parameter. Set it to 0 because a building shouldn't be moving anyway.
       shape: this.shape,
       material: material,
-      position: startingPos,
+      position: startingPos.position,
+      quaternion: startingPos.rotation,
       linearDamping: linearDamping,
       angularDamping: angularDamping,
       fixedRotation: fixedRotation,
@@ -196,7 +325,7 @@ class Building extends Group {
       collisionFilterMask: collisionFilterMask,
     });
     this.body.updateMassProperties(); // Need to call this after setting up the parameters.
-
+    parent.bodyIDToString[this.body.id] = "Building";
     // For calculating indiv part mass % based on volume.
     this.mainMass = mass;
     this.mainVolume = this.shape.volume();
@@ -234,7 +363,8 @@ class Building extends Group {
       mass: newMass, // the weighted mass.
       shape: shape,
       material: material,
-      position: new Vector3().copy(object.position).add(startingPos), // object.position.add(startingPos), either one works
+      position: new Vector3().copy(object.position).add(startingPos.position), // object.position.add(startingPos), either one works
+      quaternion: new CANNON.Quaternion().copy(object.quaternion).mult(startingPos.rotation),
       linearDamping: linearDamping,
       angularDamping: angularDamping,
       fixedRotation: fixedRotation,
@@ -242,6 +372,7 @@ class Building extends Group {
       collisionFilterMask: collisionFilterMask,
     });
     body.updateMassProperties();
+    parent.bodyIDToString[body.id] = "BuildingPiece";
 
     // Add the Cannon.js body to the world
     parent.state.world.addBody(body); // Need to call this after setting up the parameters.
@@ -254,7 +385,21 @@ class Building extends Group {
   }
 
   handleCollision(event) { // the function executed when a collision happens between something and the main physical buildling.
-    // Get the impact velocity along the normal
+    let waterParticleBody = null;
+    if (this.parent.bodyIDToString[event.contact.bi.id] == "WaterParticle") waterParticleBody = event.contact.bi;
+    else if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle") waterParticleBody = event.contact.bj;
+
+    if (waterParticleBody != null) { // damage the player (touching seafloor) 
+      this.loseHealth(1);
+    }
+
+    // console.log(this.health);
+    if (this.health <= 0) {
+      this.fractured = true;
+    }
+
+    // force method, archived for now since we are using water particle hp deduction system.
+    /*// Get the impact velocity along the normal
     const impactVelocityAlongNormal = event.contact.getImpactVelocityAlongNormal();
   
     // Calculate the impact force along the normal by multiplying the impact velocity along the normal by the mass of the colliding body
@@ -265,7 +410,7 @@ class Building extends Group {
     if (impactForce > this.state.breakThreshold) {
       // console.log("Collision happened");
       this.fractured = true;
-    }
+    }*/
   }
 
   breakBuilding(parent) {
@@ -327,6 +472,17 @@ class Building extends Group {
       this.mesh.quaternion.copy(this.body.quaternion);
     }
   }
+
+  loseHealth(amt = 1, loseHpCooldown = 1) { // building loses health... called for example by collision event between building and water
+    if (!this.lastLoseHealthAt) {
+        this.health -= amt;
+        this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+    }
+    else if (this.parentObj.gameTimer.timeElapsedInSeconds() - this.lastLoseHealthAt >= loseHpCooldown) {
+        this.health -= amt;
+        this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+    }
+  }
 }
 
 
@@ -349,11 +505,20 @@ class Building extends Group {
 
 class Skyscraper extends Building { // An example of how to make a building type
   constructor(parent, useModel, startingPos, buildingMaterial, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 100,
-    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false, collisionFilterGroup = -1, collisionFilterMask = -1) {
+    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false) {
 
-    super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, buildingMaterial, 
-      linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+    super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, buildingMaterial, 100,
+      linearDamping, angularDamping, fixedRotation);
   }
 }
 
-export { Skyscraper }; // using named exports, don't forget to update index.js as well.
+class BuildingI extends Building {
+  constructor(parent, useModel, startingPos, buildingMaterial, i, health, mass = 100, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), 
+    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false) {
+
+    super(parent, "building" + i, useModel ? BUILDINGS[i] : null, dimensions, startingPos, mass, buildingMaterial, health,
+      linearDamping, angularDamping, fixedRotation);
+  }
+}
+
+export { Skyscraper, BuildingI }; // using named exports, don't forget to update index.js as well.
