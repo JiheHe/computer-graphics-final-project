@@ -87,6 +87,8 @@ class GameScene extends Scene {
             // Just need an initializer at the beginning of the constructor ;D
         }
 
+        this.sharedState.gameMessage.style.display = "None";
+
         var survivedScreen = document.getElementById("survivedScreen");
         if (survivedScreen != null)
             survivedScreen.remove();
@@ -121,6 +123,7 @@ class GameScene extends Scene {
         this.sharedState.gameMessage.style.padding = "15px 25px 15px 25px";
         this.sharedState.gameMessage.style.borderRadius = "10px";
         this.sharedState.gameMessage.style.zIndex = "1000";
+        this.sharedState.gameMessage.style.display = "block";
 
         // ADDING A GREEN TRANSPARENT COVER SCREEN
         const screen = document.createElement("div");
@@ -147,6 +150,7 @@ class GameScene extends Scene {
         this.sharedState.gameMessage.style.padding = "15px 25px 15px 25px";
         this.sharedState.gameMessage.style.borderRadius = "10px";
         this.sharedState.gameMessage.style.zIndex = "1000";
+        this.sharedState.gameMessage.style.display = "block";
 
         // ADDING A RED TRANSPARENT COVER SCREEN
         const screen = document.createElement("div");
