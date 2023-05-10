@@ -1,8 +1,21 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es';
 import { Group } from 'three'
-import { MarchingCubes } from './MarchingCubes.js';
 
+// NOTE : this approach didn't work, so we implemented it ourselves
+// import { MarchingCubes } from './MarchingCubes.js';
+
+// coding the MarchingCubes algorithm proved to be too tedious
+// function MarchingCubes(particles) {
+//     // accessing the innner geometry of the particle
+//     console.log(particles[0])
+//     // console.log(particles[0].geometry)
+
+//     var faces = particles[0].geometry.faces;
+//     var vertices = particles[0].geometry.vertices;
+
+//     // return mesh
+// }
 
 // parameters for the Smoothed-Particle Hydrodynamics (SPH) simulation
 function SmoothedParticleHydrodynamics(particles, h, restDensity, viscosity) {
@@ -89,15 +102,6 @@ class Water extends Group {
     ) {
         super(); // inherit parent class Group properties
 
-        // Marching cubes attempt
-        /*const resolution = 32; // Adjust the resolution based on your needs
-        const material = new THREE.MeshBasicMaterial({ color: 0x0032ff, opacity: 0.5, transparent: true });
-        this.marchingCubes = new MarchingCubes(resolution, material, true, true);
-        // this.marchingCubes.position.set(0, 3, 0);
-        this.marchingCubes.scale.set(1, 1, 1); // Adjust scale values based on your needs
-        // this.marchingCubes.field = sphereField;
-        parent.add(this.marchingCubes);*/
-
         this.particles = [];
         this.numberOfParticles = numberOfParticles;
         this.parent = parent;
@@ -105,7 +109,7 @@ class Water extends Group {
         // creating all of the particles
         for (let i = 0; i < numberOfParticles; i++) {
             // making the sphere particles (visual)
-            const sphere = new THREE.SphereGeometry(radius, 50, 50); // remember to add more than 8 segments
+            const sphere = new THREE.SphereGeometry( radius, 5, 5 ); // remember to add more than 8 segments
 
             // load the cube texture
             const loader = new THREE.CubeTextureLoader();
@@ -146,9 +150,9 @@ class Water extends Group {
             const particle = new THREE.Mesh(sphere, waterMaterial)
 
             // generating a random starting position for each ball
-            const offsetX = (Math.random() * 3) - 1;   // Random number between -1 and 1
-            const offsetY = (Math.random() * 3) - 1;   // Random number between -1 and 1
-            const offsetZ = (Math.random() * 3) - 1;   // Random number between -1 and 1
+            const offsetX = (Math.random() * radius * 15) - 1;   // Random number between -1 and 1
+            const offsetY = (Math.random() * radius * 15) - 1;   // Random number between -1 and 1
+            const offsetZ = (Math.random() * radius * 15) - 1;   // Random number between -1 and 1
             const offsetVector = new CANNON.Vec3(offsetX, offsetY, offsetZ);
 
             // Add the offset vector to your original vector
@@ -180,9 +184,9 @@ class Water extends Group {
         }
 
         // adding all particles to the parent
-         for (let i = 0; i < numberOfParticles; i++) {
+        for (let i = 0; i < numberOfParticles; i++) {
             parent.add(this.particles[i].particle)
-         }
+        }
 
         // Add self to parent's update list
         parent.addToUpdateList(this);
@@ -194,39 +198,115 @@ class Water extends Group {
         }
 
         if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle" ) {
+            let base = 0.5, decayFactor = 2; // initialize parameter variables
+
+            // getting the two sphere three.js objects that collided
+            var sphere1 = this.particles[event.contact.bi.index - 1].particle;
+            var sphere2 = this.particles[event.contact.bj.index - 1].particle;
+
+            // Updating the vertices of both objects to look as though they are merging
+            const [newVerts1, newVerts2] = updateVerticesOfCloseSpheres(sphere1, sphere2, base, decayFactor);
+            // const oldVerts1 = sphere1.geometry.getAttribute('position').array;
+            const oldVerts1 = sphere1.geometry.vertices;
+
+            for (let i = 0; i < newVerts1.length; i++) {
+                oldVerts1[i].x = newVerts1[i].x;
+                oldVerts1[i].y = newVerts1[i].y;
+                oldVerts1[i].z = newVerts1[i].z;
+            }
+
+            // Updating the vertices of both objects to look as though they are merging
+            // const oldVerts2 = sphere2.geometry.getAttribute('position').array;
+            const oldVerts2 = sphere2.geometry.vertices;
+
+            for (let i = 0; i < newVerts2.length; i++) {
+                oldVerts2[i].x = newVerts2[i].x;
+                oldVerts2[i].y = newVerts2[i].y;
+                oldVerts2[i].z = newVerts2[i].z;
+            }
         }
     }
 
     update() {
-        const pbodyList = this.particles.map((item) => item.pbody)
-        SmoothedParticleHydrodynamics(pbodyList, 0.1, 1000, 0.1)
-         for (let i = 0; i < this.numberOfParticles; i++) {
-            let p = this.particles[i]
-           p.particle.position.copy(p.pbody.position);
-         }
-        
-        // Marching Cube Efforts
-        // this.updateScalarField();
-        // this.updateMesh();
-    }
+        // performing the Smoothed-Particle Hydrodynamics calculation
+        const pbodyList = this.particles.map((item) => item.pbody);
+        SmoothedParticleHydrodynamics(pbodyList, 0.1, 1000, 0.1);
 
-    updateScalarField() {
-        this.marchingCubes.reset();
-      
-        const strength = 12; // adjust this value to control the size of the ball
-        const subtract = 5; // positive for a solid ball, negative for a hollow ball
-        const colors = null;
-      
-        for (const { pbody } of this.particles) {
-          const position = pbody.position;
-          this.marchingCubes.addBall(position.x, position.y, position.z, strength, subtract, colors);
+        // generating a marching cubes mesh and updating it
+        const particleList = this.particles.map((item) => item.particle);
+        // MarchingCubes(particleList);
+        // for (let i = 0; i < this.numberOfParticles; i++) {
+        //     console.log(this.particles[i]);
+        // }
+
+        // updating the position of the visual world with the bodies
+        for (let i = 0; i < this.numberOfParticles; i++) {
+            let p = this.particles[i];
+            p.particle.position.copy(p.pbody.position);
         }
     }
+}
 
-    updateMesh() {
-        this.marchingCubes.update();
-    }
+function exponentialDecay(x, base, decayFactor) {
+  return 1 / (1 + Math.pow(base, decayFactor * x));
+}
 
+function extractVectorVertices(arrayOfCoordinates) {
+  var extractedVectorVertices = [];
+
+  for (let i = 0; i < arrayOfCoordinates.length; i += 3) {
+    extractedVectorVertices.push(
+      new THREE.Vector3(
+        arrayOfCoordinates[i], arrayOfCoordinates[i + 1], arrayOfCoordinates[i + 2]
+      ) // creating a new Vector3 point to add to the list
+    );
+  }
+
+  return extractedVectorVertices;
+}
+
+function updateVerticesOfCloseSpheres(sphere1, sphere2, base, decayFactor) {
+  // console.log(sphere1); console.log(sphere2); // debugging the spheres
+
+  // getting the positions of each of the spheres
+  const position1 = sphere1.position;
+  const position2 = sphere2.position;
+
+  // getting the geometries of each of the spheres
+  const sphere1Geometry = sphere1.geometry;
+  const sphere2Geometry = sphere2.geometry;
+
+  // getting the vertex coordinate values
+//   const sphere1Vertices = sphere1Geometry.getAttribute('position').array;
+//   const sphere2Vertices = sphere2Geometry.getAttribute('position').array;
+
+  // getting the sphere vector array (since we are using old version, we don't need to extract)
+//   const sphere1VectorVertices = extractVectorVertices(sphere1Vertices);
+//   const sphere2VectorVertices = extractVectorVertices(sphere2Vertices);
+  const sphere1VectorVertices = sphere1Geometry.vertices;
+  const sphere2VectorVertices = sphere2Geometry.vertices;
+
+  const newVerts1 = [], newVerts2 = []; // creating storage arrays for all of the vertices
+
+  for (let i = 0; i < sphere1VectorVertices.length; i++) {
+    let distance = position2.distanceTo(sphere1VectorVertices[i]); // getting the distance to the other sphere
+    let factor = exponentialDecay(distance, base, decayFactor);
+
+    var direction = sphere1VectorVertices[i].sub(position2);
+
+    newVerts1.push(sphere1VectorVertices[i].clone().add(direction.clone().multiplyScalar(factor)));
+  }
+
+  for (let i = 0; i < sphere2VectorVertices; i++) {
+    let distance = position1.distanceTo(sphere2VectorVertices[i]); // getting the distance to the other sphere
+    let factor = exponentialDecay(distance, base, decayFactor);
+
+    var direction = sphere2VectorVertices[i].sub(position1);
+
+    newVerts2.push(sphere2VectorVertices[i].clone().add(direction.clone().multiplyScalar(factor)));
+  }
+
+  return [newVerts1, newVerts2];
 }
 
 export default Water;

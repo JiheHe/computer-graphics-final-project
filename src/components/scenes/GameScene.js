@@ -195,9 +195,9 @@ class GameScene extends Scene {
         const water = new Water(
             this,                       // passing in the parent class
             new CANNON.Vec3(0, 3, 0),   // starting position of stream of water
-            125,                        // number of particles
+            30,                        // number of particles
             waterMaterial,              // 
-            1
+            0.75
         );
 
         this.add(land, player, lights, water);
