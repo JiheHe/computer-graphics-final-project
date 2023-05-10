@@ -382,7 +382,7 @@ class Building extends Group {
       this.loseHealth(10);
     }
 
-    console.log(this.health);
+    // console.log(this.health);
     if (this.health <= 0) {
       this.fractured = true;
     }

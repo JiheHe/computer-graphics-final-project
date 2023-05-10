@@ -7,7 +7,7 @@ import { BoxGeometry, MeshBasicMaterial, Mesh, Geometry } from 'three';
 import { createConvexPolyhedronFromGeometry, mergeVerticesAndFaces } from '../Building/Building.js';
 
 function createBoxColliderMesh(landBody) { // A helper function for visualizing a box collider
-    console.log(landBody);
+    // console.log(landBody);
     const boxShape = landBody.shapes[0];
     const geometry = new BoxGeometry(
         boxShape.halfExtents.x * 2, // don't forget to *2 since half-size
@@ -156,7 +156,7 @@ class Land extends Group {
             this.traverseAndInitPieces(parent, gltf.scene.children, startingPos, boundaryWallParams, mass, materiaL, collisionFilterGroup, collisionFilterMask, linearDamping, angularDamping, fixedRotation);
             // Visualize the whole scene, since all landshapes are static.
             this.add(gltf.scene);
-            console.log(gltf.scene);
+            // console.log(gltf.scene);
 
             // Update Three.js object position to match Cannon.js body position (Two different systems)
             this.position.copy(startingPos); // this.body.position. Since the shape is static, no need for constant update. Should be 1 to 1 coord ratio.

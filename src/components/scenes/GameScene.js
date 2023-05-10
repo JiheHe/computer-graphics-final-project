@@ -54,6 +54,7 @@ class GameScene extends Scene {
         this.startGameButton = this.state.gui.add(this.guiControls, "startGame").name("Start Game");
         this.pauseResumeButton = this.state.gui.add(this.guiControls, "pauseGame").name("Pause Game");
         this.state.gui.add(this.state, 'volume', 0, 1);
+        document.getElementsByClassName("dg ac")[0].style.zIndex = "1000"; // setting the z-index of the GUI DomElement, so that we can restart at the end
 
         // Add event listeners for keydown and keyup events (basically key press and key lift)
         window.addEventListener('keydown', (event) => this.handleKey(event, true));
@@ -63,14 +64,14 @@ class GameScene extends Scene {
         this.initializeTestingScene(); 
 
         // Load in the text elements. Variable should've been set in scene initialization
-        this.sharedState.timerText.textContent = "Time Remaining: " + this.numSecondsToSurvive;
-        this.sharedState.healthText.textContent = "Health: " + this.player.health;
+        this.sharedState.timerText.textContent = "Time Remaining: " + this.numSecondsToSurvive + " sec.";
+        this.sharedState.healthText.textContent = "Hitpoints: " + this.player.health;
         this.sharedState.gameMessage.textContent = ""; // in seconds
     }
 
     startGameplay() {
         if (this.gameState == GAMESTATE_NOTINGAME) { // start the session
-            console.log("Game starts!");
+            // console.log("Game starts!");
             // game starts, can spawn waves and stuff. 
             // TODO
             this.gameTimer.startTimer();
@@ -85,18 +86,26 @@ class GameScene extends Scene {
             // TODO: can add a "level" parameter and other additional informations to pass onto the next copy.
             // Just need an initializer at the beginning of the constructor ;D
         }
+
+        var survivedScreen = document.getElementById("survivedScreen");
+        if (survivedScreen != null)
+            survivedScreen.remove();
+
+        var failedScreen = document.getElementById("failedScreen");
+        if (failedScreen != null)
+            failedScreen.remove();
     }
 
     pauseResumeGameplay() { // pauses all input processing and physics simulation. The world freezes.
         if (this.gameState == GAMESTATE_INGAME) { // pause the session
-            console.log("Game paused!");
+            // console.log("Game paused!");
             this.gameState = GAMESTATE_PAUSED;
             this.gameTimer.pauseTimer();
             this.pauseResumeButton.__li.firstElementChild.textContent = "Resume Game";
             this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
         }
         else if (this.gameState == GAMESTATE_PAUSED) { // resume the session
-            console.log("Game resumes!");
+            // console.log("Game resumes!");
             this.gameState = GAMESTATE_INGAME;
             this.pauseResumeButton.__li.firstElementChild.textContent = "Pause Game";
             this.startGameButton.__li.firstElementChild.textContent = "DISABLED: pause game first";
@@ -104,20 +113,54 @@ class GameScene extends Scene {
     }
 
     stagePassed() { // the user survives the timer!
-        this.sharedState.gameMessage.textContent = "<b>You Survived!</b>"; // in seconds
+        this.sharedState.gameMessage.textContent = "Survived !!!"; // in seconds
+        this.sharedState.gameMessage.style.fontWeight = "bold"
         this.sharedState.gameMessage.style.backgroundColor = "#04AA6D";
+        this.sharedState.gameMessage.style.color = "white";
         this.sharedState.gameMessage.style.fontFamily = "sans-serif";
         this.sharedState.gameMessage.style.padding = "15px 25px 15px 25px";
         this.sharedState.gameMessage.style.borderRadius = "10px";
+        this.sharedState.gameMessage.style.zIndex = "1000";
+
+        // ADDING A GREEN TRANSPARENT COVER SCREEN
+        const screen = document.createElement("div");
+        screen.style.position = "fixed";
+        screen.style.top = "0";
+        screen.style.left = "0";
+        screen.style.width = "100%";
+        screen.style.height = "100%";
+        screen.style.zIndex = "999";
+        screen.style.backgroundColor = "#04AA6D";
+        screen.style.opacity = "0.4";
+        screen.id = "survivedScreen";
+        document.body.appendChild(screen);
+
         this.pauseResumeGameplay(); // for now
     }
 
     stageFailed() { // the user ran out of health before timer ends.
-        this.sharedState.gameMessage.textContent = "<b>You Failed!</b>"; // in seconds
+        this.sharedState.gameMessage.textContent = "Failed !!!"; // in seconds
+        this.sharedState.gameMessage.style.fontWeight = "bold"
         this.sharedState.gameMessage.style.backgroundColor = "#f44336";
+        this.sharedState.gameMessage.style.color = "white";
         this.sharedState.gameMessage.style.fontFamily = "sans-serif";
         this.sharedState.gameMessage.style.padding = "15px 25px 15px 25px";
         this.sharedState.gameMessage.style.borderRadius = "10px";
+        this.sharedState.gameMessage.style.zIndex = "1000";
+
+        // ADDING A RED TRANSPARENT COVER SCREEN
+        const screen = document.createElement("div");
+        screen.style.position = "fixed";
+        screen.style.top = "0";
+        screen.style.left = "0";
+        screen.style.width = "100%";
+        screen.style.height = "100%";
+        screen.style.zIndex = "999";
+        screen.style.backgroundColor = "#f44336";
+        screen.style.opacity = "0.4";
+        screen.id = "failedScreen";
+        document.body.appendChild(screen);
+
         this.pauseResumeGameplay(); // for now
     }
 
@@ -140,7 +183,7 @@ class GameScene extends Scene {
                 {
                     // Check timer
                     let timeRemaining = this.numSecondsToSurvive - this.gameTimer.timeElapsedInSeconds();
-                    this.sharedState.timerText.textContent = "Time Remaining: " + Math.floor(timeRemaining); // in seconds
+                    this.sharedState.timerText.textContent = "Time Remaining: " + Math.floor(timeRemaining) + " sec."; // in seconds
                     if (timeRemaining <= 0) this.stagePassed();
      
                     // Update physics world

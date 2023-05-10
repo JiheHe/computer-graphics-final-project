@@ -16,7 +16,7 @@ const renderer = new WebGLRenderer({ antialias: true });
 
 // some html texts for gameState. TODO: potential visual upgrade?
 const timerText = createTextElement("Time Remaining: ", { top: '20px', left: '20px' }, 1000);
-const healthText = createTextElement("Health: ", { top: '70px', left: '20px' }, 1000);
+const healthText = createTextElement("Hitpoints: ", { top: '75px', left: '20px' }, 1000);
 const gameMessage = createTextElement("", {}, 1000, true);
 
 // STYLING ALL OF THE MESSAGES CREATED
@@ -28,6 +28,7 @@ timerText.style.fontFamily = "sans-serif";
 timerText.style.padding = "15px 25px 15px 25px";
 timerText.style.borderRadius = "10px";
 timerText.style.fontWeight = "bold";
+timerText.style.zIndex = "1000";
 
 // health
 healthText.style.backgroundColor = "#04AA6D";
@@ -36,6 +37,7 @@ healthText.style.fontFamily = "sans-serif";
 healthText.style.padding = "15px 25px 15px 25px";
 healthText.style.borderRadius = "10px";
 healthText.style.fontWeight = "bold";
+healthText.style.zIndex = "1000";
 
 // create a shared state object to pass around (communicates between this and the scene objs created)
 const sharedState = {timerText, healthText, gameMessage};
