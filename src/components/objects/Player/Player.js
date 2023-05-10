@@ -75,7 +75,7 @@ class Player extends Group {
         // Set up Cannon.js physics
         this.body = new CANNON.Body({
             mass: 70, // The mass of the object in kg, this is the mass of standard human male
-            shape: new CANNON.Cylinder(0.5, 0.5, 2, 16), // The shape of the object's collision volume
+            shape: new CANNON.Cylinder(0.45, 0.45, 1.89, 12), // The shape of the object's collision volume
             material: material,
             linearDamping: 0.1, // might be useless since kinematics now... // A factor that reduces the object's linear velocity over time, simulating friction or air resistence. 
             fixedRotation: true, // When true, disables forced rotation due to collision
