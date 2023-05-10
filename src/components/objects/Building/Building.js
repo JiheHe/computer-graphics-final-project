@@ -231,12 +231,12 @@ class Building extends Group {
       const loader = new GLTFLoader();
       loader.load(modelUrl, (gltf) => {
         // Cache each fractured piece in the file, following the convention
-        this.traverseAndDefinePieces(gltf.scene.children, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+        let mainBuilding = this.traverseAndDefinePieces(gltf.scene.children, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
         // Add the main piece (0th 'earliest' piece, following the convention) to the scene.
         // const dimensions = this.calculateModelDimensions(gltf.scene.children[0]); // just a bounding box dim, not as accurate but prob faster. Put dim back if too slow.
         this.initPhysics(parent, null, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
-        this.originalObj = gltf.scene.children[0]; // need to put it before the add, otherwise the address points to other stuff since:
-        this.add(gltf.scene.children[0]); // changes the hierarchy of the first child by moving it under the custom script; visualizes it
+        this.originalObj = mainBuilding; // need to put it before the add, otherwise the address points to other stuff since:
+        this.add(mainBuilding); // changes the hierarchy of the first child by moving it under the custom script; visualizes it
         this.fractured = false; // starts off intact
 
         // Add a collision event listener to the building's MAIN physics body
@@ -277,23 +277,33 @@ class Building extends Group {
   traverseAndDefinePieces(childObjs, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
     // Define the main piece (keeps track of all the meshes in the OG building)
     this.mainmeshes = [];
-    childObjs[0].traverse((child) => { 
-      if (child.isMesh) {
-        this.mainmeshes.push(child);
-      }
-    });
+    let mainBuilding = null;
+
     // Define the fractured pieces via caching
-    for (let i = 1; i < childObjs.length; i++) {
+    for (let i = 0; i < childObjs.length; i++) {
       let childObj = childObjs[i]; // current piece.
-      const submeshes = []; // meshes within this piece
-      childObj.traverse((child) => { // childObj is also included in the traversal. MAYBE???
-        if (child.isMesh) {
-          submeshes.push(child);
-        }
-      });
-      this.state.fracturedPieces.push(
-        {childObj, submeshes, startingPos, mass: 0, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
+      if (!childObj.name.includes("cell")) { // the one main piece, following the convention
+        console.log("1 main mesh found");
+        mainBuilding = childObj;
+        childObj.traverse((child) => { 
+          if (child.isMesh) {
+            this.mainmeshes.push(child);
+          }
+        });
+      }
+      else {
+        const submeshes = []; // meshes within this piece
+        childObj.traverse((child) => { // childObj is also included in the traversal. MAYBE???
+          if (child.isMesh) {
+            submeshes.push(child);
+          }
+        });
+        this.state.fracturedPieces.push(
+          {childObj, submeshes, startingPos, mass: 0, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask} ); // temporary cache
+      }
     }
+
+    return mainBuilding;
   }
 
   initPhysics(parent, dimensions, startingPos, mass, material, linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) {
@@ -381,7 +391,7 @@ class Building extends Group {
     else if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle") waterParticleBody = event.contact.bj;
 
     if (waterParticleBody != null) { // damage the player (touching seafloor) 
-      this.loseHealth(10);
+      this.loseHealth(1);
     }
 
     // console.log(this.health);
