@@ -32,7 +32,7 @@ function createBoxColliderMesh(landBody) { // A helper function for visualizing 
 // GRASS MATERIAL
 /////////////////
 
-const clock = new THREE.Clock();
+// const clock = new THREE.Clock();
 
 const vertexShader = `
   varying vec2 vUv;
@@ -234,7 +234,7 @@ class Land extends Group {
             // ### adding grass to the scene ###
             // #################################
 
-            this.instanceNumber = 5000;
+            /*this.instanceNumber = 5000;
             this.dummy = new THREE.Object3D();
 
             const grassGeometry = new THREE.PlaneGeometry( 1000, 1000, 1000, 4 );
@@ -244,7 +244,7 @@ class Land extends Group {
 
             // console.log(instancedMesh);
 
-            // parent.add( this.instancedMesh );
+            // parent.add( this.instancedMesh );*/
 
             // Add a collision event listener to the building's MAIN physics body
             // this.objectInContact = [];
@@ -374,7 +374,7 @@ class Land extends Group {
         }
 
         // Position and scale the grass blade instances randomly.
-        if (this.instancedMesh) {
+        /*if (this.instancedMesh) {
             for ( let i=0 ; i<this.instanceNumber ; i++ ) {
 
                 this.dummy.position.set(
@@ -395,7 +395,7 @@ class Land extends Group {
 
         	// Hand a time variable to vertex shader for wind displacement.
 	    leavesMaterial.uniforms.time.value = clock.getElapsedTime();
-        leavesMaterial.uniformsNeedUpdate = true;
+        leavesMaterial.uniformsNeedUpdate = true;*/
 
         //
 
