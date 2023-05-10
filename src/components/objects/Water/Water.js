@@ -162,12 +162,12 @@ class Water extends Group {
             const pbody = new CANNON.Body({ // particle body
                 mass: 1,
                 shape: new CANNON.Sphere(radius), // shape of the object's collision volume
-                material: waterMaterial,
-                linearDamping: 0,
+                material: new CANNON.Material({friction: 0.1, restitution: 0.5}),
+                linearDamping: 0.2,
                 fixedRotation: false, // disables forced rotation due to collision
                 position: randomStartingPosition, // starting position of the object in the physics world
-                collisionFilterGroup: -1,
-                collisionFilterMask: -1,
+                collisionFilterGroup: 0b10000,
+                collisionFilterMask: -1, // 0b101111, // Don't collide into each other.
             });
             pbody.updateMassProperties(); // Need to call this after setting up the parameter
             parent.bodyIDToString[pbody.id] = "WaterParticle";
@@ -193,8 +193,12 @@ class Water extends Group {
     }
 
     handleCollision(event) { // the function executed when a collision happens between something and the main physical buildling.
-        if (this.parent.bodyIDToString[event.contact.bj.id] == "Land") {
-            // event.contact.bi.applyForce(new CANNON.Vec3(0, 10, 0), event.contact.bi.position);
+        let playerBody = null;
+        if (this.parent.bodyIDToString[event.contact.bi.id] == "Player") playerBody = event.contact.bi;
+        else if (this.parent.bodyIDToString[event.contact.bj.id] == "Player") playerBody = event.contact.bj;
+
+        if (playerBody != null) { // damage the player (touching seafloor) 
+            this.parent.player.loseHealth(1);
         }
 
         if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle" ) {
@@ -224,7 +228,6 @@ class Water extends Group {
                 oldVerts2[i].y = newVerts2[i].y;
                 oldVerts2[i].z = newVerts2[i].z;
             }
-        }
     }
 
     update() {

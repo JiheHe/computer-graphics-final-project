@@ -18,9 +18,10 @@ const renderer = new WebGLRenderer({ antialias: true });
 // Some html texts for gameState. TODO: potential visual upgrade?
 const timerText = createTextElement("Time Remaining: ", { top: '20px', left: '20px' }, 1000);
 const healthText = createTextElement("Health: ", { top: '40px', left: '20px' }, 1000);
+const gameMessage = createTextElement("", {}, 1000, true);
 
 // Create a shared state object to pass around (communicates between this and the scene objs created)
-const sharedState = {timerText, healthText};
+const sharedState = {timerText, healthText, gameMessage};
 // Assign the scene property after sharedState has been created
 sharedState.scene = new GameScene(camera, sharedState);
 // TODO: add additional info parameters.
@@ -67,13 +68,21 @@ windowResizeHandler();
 window.addEventListener('resize', windowResizeHandler, false);
 
 // A helper function that adds a text to the top left of the page, specified with some parameter. HTML style.
-function createTextElement(textContent, position, zIndex) {
+function createTextElement(textContent, position, zIndex, center = false) {
     const textElement = document.createElement('div');
     textElement.textContent = textContent;
     textElement.style.position = 'fixed';
-    textElement.style.top = position.top || '10px';
-    textElement.style.left = position.left || '10px';
     textElement.style.zIndex = zIndex || '999'; // Make sure the text element is on top of other elements
+  
+    if (center) {
+      textElement.style.top = '50%';
+      textElement.style.left = '50%';
+      textElement.style.transform = 'translate(-50%, -50%)';
+    } else {
+      textElement.style.top = position.top || '10px';
+      textElement.style.left = position.left || '10px';
+    }
+  
     document.body.appendChild(textElement);
     return textElement;
   }

@@ -92,20 +92,21 @@ export function mergeVerticesAndFaces(submeshes) { // given a list of meshes, me
 }
 
 class Building extends Group {
-  constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, material, 
-    linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask) { // dims is a vec3
+  constructor(parent, name, modelUrl = null, dims = null, startingPos, mass, material, breakThreshold = 100,
+    linearDamping, angularDamping, fixedRotation, collisionFilterGroup = 0b01000, collisionFilterMask = -1) { // dims is a vec3
     // Call parent Group() constructor
     super();
 
     // Init state, variable specific to this object. (TODO: tune them later)
     this.state = {
       colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
-      breakThreshold: 1000, // Set the force threshold for breaking the building
+      breakThreshold: breakThreshold, // Set the force threshold for breaking the building // Treat this as buildling's HP
       fracturedPieces: [], // Store fractured pieces' physics bodies and objects
     }
 
     this.name = name;
     this.parentObj = parent;
+    this.health = this.state.breakThreshold;
 
     if (modelUrl) { // if a model is supplied
       // Load object
@@ -255,7 +256,21 @@ class Building extends Group {
   }
 
   handleCollision(event) { // the function executed when a collision happens between something and the main physical buildling.
-    // Get the impact velocity along the normal
+    let waterParticleBody = null;
+    if (this.parent.bodyIDToString[event.contact.bi.id] == "WaterParticle") waterParticleBody = event.contact.bi;
+    else if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle") waterParticleBody = event.contact.bj;
+
+    if (waterParticleBody != null) { // damage the player (touching seafloor) 
+      this.loseHealth(10);
+    }
+
+    console.log(this.health);
+    if (this.health <= 0) {
+      this.fractured = true;
+    }
+
+    // force method, archived for now since we are using water particle hp deduction system.
+    /*// Get the impact velocity along the normal
     const impactVelocityAlongNormal = event.contact.getImpactVelocityAlongNormal();
   
     // Calculate the impact force along the normal by multiplying the impact velocity along the normal by the mass of the colliding body
@@ -266,7 +281,7 @@ class Building extends Group {
     if (impactForce > this.state.breakThreshold) {
       // console.log("Collision happened");
       this.fractured = true;
-    }
+    }*/
   }
 
   breakBuilding(parent) {
@@ -328,6 +343,17 @@ class Building extends Group {
       this.mesh.quaternion.copy(this.body.quaternion);
     }
   }
+
+  loseHealth(amt = 1, loseHpCooldown = 1) { // building loses health... called for example by collision event between building and water
+    if (!this.lastLoseHealthAt) {
+        this.health -= amt;
+        this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+    }
+    else if (this.parentObj.gameTimer.timeElapsedInSeconds() - this.lastLoseHealthAt >= loseHpCooldown) {
+        this.health -= amt;
+        this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+    }
+  }
 }
 
 
@@ -350,10 +376,10 @@ class Building extends Group {
 
 class Skyscraper extends Building { // An example of how to make a building type
   constructor(parent, useModel, startingPos, buildingMaterial, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 100,
-    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false, collisionFilterGroup = -1, collisionFilterMask = -1) {
+    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false) {
 
-    super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, buildingMaterial, 
-      linearDamping, angularDamping, fixedRotation, collisionFilterGroup, collisionFilterMask);
+    super(parent, "skyscraper", useModel ? SKYSCRAPER_MODEL : null, dimensions, startingPos, mass, buildingMaterial, 100,
+      linearDamping, angularDamping, fixedRotation);
   }
 }
 

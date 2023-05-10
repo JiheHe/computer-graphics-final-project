@@ -65,6 +65,7 @@ class GameScene extends Scene {
         // Load in the text elements. Variable should've been set in scene initialization
         this.sharedState.timerText.textContent = "Time Remaining: " + this.numSecondsToSurvive;
         this.sharedState.healthText.textContent = "Health: " + this.player.health;
+        this.sharedState.gameMessage.textContent = ""; // in seconds
     }
 
     startGameplay() {
@@ -103,12 +104,12 @@ class GameScene extends Scene {
     }
 
     stagePassed() { // the user survives the timer!
-        console.log("You survived!");
+        this.sharedState.gameMessage.textContent = "You Survived!"; // in seconds
         this.pauseResumeGameplay(); // for now
     }
 
     stageFailed() { // the user ran out of health before timer ends.
-        console.log("You failed");
+        this.sharedState.gameMessage.textContent = "You Failed!"; // in seconds
         this.pauseResumeGameplay(); // for now
     }
 
@@ -185,10 +186,11 @@ class GameScene extends Scene {
         const player = new Player(this, new CANNON.Vec3(6, 1, 6), characterMaterial); // the player; can specify its starting position
         this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
         const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
-            {wallHeight: 5000, wallTurnOffIndexList: [], isVisible: true});  // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
+            {wallHeight: 5000, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
+            {start: -1, end: 10}); // start and end Y value of the rising platform that simulates rising tide  
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
-        // const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
-        // const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
+        const simpleBuilding = new Skyscraper(this, true, new CANNON.Vec3(0, 10, 0), skyscraperMaterial); // an example of actual building
+        const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(-5, 10, -5), skyscraperMaterial); // an example of size/loc visualization
 
         // creating particle system
         const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
@@ -196,11 +198,13 @@ class GameScene extends Scene {
             this,                       // passing in the parent class
             new CANNON.Vec3(0, 3, 0),   // starting position of stream of water
             30,                        // number of particles
+            new CANNON.Vec3(0, 3, 6),   // starting position of stream of water
+            100,                        // number of particles
             waterMaterial,              // 
             0.75
         );
 
-        this.add(land, player, lights, water);
+        this.add(land, player, lights, water, simpleBuilding, buildingVisualization);
     }
     // ...
 }
