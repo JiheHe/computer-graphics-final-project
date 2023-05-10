@@ -104,12 +104,20 @@ class GameScene extends Scene {
     }
 
     stagePassed() { // the user survives the timer!
-        this.sharedState.gameMessage.textContent = "You Survived!"; // in seconds
+        this.sharedState.gameMessage.textContent = "<b>You Survived!</b>"; // in seconds
+        this.sharedState.gameMessage.style.backgroundColor = "#04AA6D";
+        this.sharedState.gameMessage.style.fontFamily = "sans-serif";
+        this.sharedState.gameMessage.style.padding = "15px 25px 15px 25px";
+        this.sharedState.gameMessage.style.borderRadius = "10px";
         this.pauseResumeGameplay(); // for now
     }
 
     stageFailed() { // the user ran out of health before timer ends.
-        this.sharedState.gameMessage.textContent = "You Failed!"; // in seconds
+        this.sharedState.gameMessage.textContent = "<b>You Failed!</b>"; // in seconds
+        this.sharedState.gameMessage.style.backgroundColor = "#f44336";
+        this.sharedState.gameMessage.style.fontFamily = "sans-serif";
+        this.sharedState.gameMessage.style.padding = "15px 25px 15px 25px";
+        this.sharedState.gameMessage.style.borderRadius = "10px";
         this.pauseResumeGameplay(); // for now
     }
 
@@ -150,6 +158,13 @@ class GameScene extends Scene {
 
                     // Check health
                     this.sharedState.healthText.textContent = "Health: " + this.player.health;
+                    if (this.player.health > 90) {
+                        this.sharedState.healthText.style.backgroundColor = "#04AA6D";
+                    } else if (this.player.health > 60) {
+                        this.sharedState.healthText.style.backgroundColor = "#ff9800";
+                    } else {
+                        this.sharedState.healthText.style.backgroundColor = "#f44336";
+                    }
                     if (this.player.health <= 0) this.stageFailed();
                     // this.player.loseHealth(); // just for example.
                 }
