@@ -145,7 +145,7 @@ class Water extends Group {
             const offsetZ = (Math.random() * 20) - 10;   // Random number between -1 and 1
             const offsetVector = new CANNON.Vec3(offsetX, offsetY, offsetZ);
 
-            // Add the offset vector to your original vector
+            // add the offset vector to your original vector
             const randomStartingPosition = startingPosition.vadd(offsetVector);
 
             // making the sphere particles (physical)
@@ -162,10 +162,10 @@ class Water extends Group {
             pbody.updateMassProperties(); // Need to call this after setting up the parameter
             parent.bodyIDToString[pbody.id] = "WaterParticle";
             
-            // Add body to the world (physics world)
+            // add body to the world (physics world)
             parent.state.world.addBody(pbody);
 
-            // Add a collision event listener to the building's MAIN physics body
+            // add a collision event listener to the building's MAIN physics body
             pbody.addEventListener("collide", this.handleCollision.bind(this));
 
             particle.position.copy(pbody.position);
