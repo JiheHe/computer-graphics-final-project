@@ -179,13 +179,24 @@ class Land extends Group {
                 material: new CANNON.Material({friction: 0.5, restitution: 0.5}),
                 position: new CANNON.Vec3(startingPos.x, riserLandY.start, startingPos.z),
                 collisionFilterGroup: 0b100000, 
-                collisionFilterMask: 0b010001, // Only collides with player and water particles
+                collisionFilterMask: 0b010000, // Only collides with water particles
             });
-            
             body.updateMassProperties(); // Need to call this after setting up the parameters.
             
             parent.bodyIDToString[body.id] = "SeaLevel";
             parent.state.world.addBody(body);
+
+            const killerBody = new CANNON.Body({  // invisible collider properties
+                mass: 0,  // static
+                shape: shape,
+                material: new CANNON.Material(),
+                position: body.position,
+                collisionFilterGroup: 0b100000, 
+                collisionFilterMask: 0b000001, // Only collides with player
+            });
+            killerBody.updateMassProperties();
+            parent.bodyIDToString[killerBody.id] = "SeaLevel";
+            parent.state.world.addBody(killerBody);
 
             // ################################################
 
@@ -218,7 +229,7 @@ class Land extends Group {
             let material = new MeshBasicMaterial({
                 color: 0x0000ff,
                 transparent: true,
-                opacity: 0.8,
+                opacity: 0.7,
             });
 
             // const mesh = new Mesh(geometry, material); // creating the final mesh to display
@@ -234,13 +245,14 @@ class Land extends Group {
             parent.add(meshVolume);
             this.originalPosition = new Vector3().copy(body.position);
 
-            this.landRiser = {body, meshVolume};
+            this.landRiser = {body, meshVolume, killerBody};
             
             // Add a collision event listener to the building's MAIN physics body
             // this.objectInContact = [];
             // parent.state.world.addEventListener("beginContact", this.handleContact.bind(this));
             // parent.state.world.addEventListener("endContact", this.handleDetact.bind(this));
             body.addEventListener("collide", this.handleContact.bind(this));
+            killerBody.addEventListener("collide", this.handleContact.bind(this));
 
             // #################################
             // ### adding grass to the scene ###
@@ -350,7 +362,7 @@ class Land extends Group {
         else if (this.parentObj.bodyIDToString[event.contact.bj.id] == "WaterParticle") waterParticleBody = event.contact.bj;
 
         if (playerBody != null) { // damage the player (touching seafloor) 
-            this.parentObj.player.loseHealthBig(50, 1);
+            this.parentObj.player.loseHealthBig(100, 1); // INSTA KILL.
             playerBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), 1000, randomInclusive(0, 100)), playerBody.position); // for retriggering
         }
 
@@ -385,7 +397,9 @@ class Land extends Group {
             let newYPosition = this.riserLandY.start + (this.riserLandY.end - this.riserLandY.start) * timeRatio;
             
             // Update the position of landRiser.mesh and landRiser.body
+            let drownDepth = 2;
             this.landRiser.body.position.y = newYPosition;
+            this.landRiser.killerBody.position.y = newYPosition - drownDepth;
             // this.landRiser.mesh.position.y = newYPosition;
             
             // Adjust the height of landRiser.meshVolume and reposition it
