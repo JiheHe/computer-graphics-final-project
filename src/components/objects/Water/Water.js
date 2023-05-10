@@ -105,20 +105,10 @@ class Water extends Group {
         // creating all of the particles
         for (let i = 0; i < numberOfParticles; i++) {
             // making the sphere particles (visual)
-            const sphere = new THREE.SphereGeometry(radius, 50, 50); // remember to add more than 8 segments
+            const sphere = new THREE.SphereGeometry(radius, 4, 4); // remember to add more than 8 segments
 
             // load the cube texture
             const loader = new THREE.CubeTextureLoader();
-
-            // const irradiance = loader.load([
-            //     './src/components/objects/Water/textures/irradiance/negX.jpg',  // right
-            //     './src/components/objects/Water/textures/irradiance/posX.jpg',  // left
-            //     './src/components/objects/Water/textures/irradiance/negZ.jpg',  // top
-            //     './src/components/objects/Water/textures/irradiance/posZ.jpg',  // bottom
-            //     './src/components/objects/Water/textures/irradiance/negY.jpg',  // front
-            //     './src/components/objects/Water/textures/irradiance/posY.jpg'   // back
-            // ])
-            // irradiance.encoding = THREE.sRGBEncoding;
 
             const specular = loader.load([
                 './src/components/objects/Water/textures/specular/negX.jpg',  // right
@@ -147,7 +137,7 @@ class Water extends Group {
 
             // generating a random starting position for each ball
             const offsetX = (Math.random() * 3) - 1;   // Random number between -1 and 1
-            const offsetY = (Math.random() * 3) - 1;   // Random number between -1 and 1
+            const offsetY = (Math.random() * 20) - 1;   // Random number between -1 and 1
             const offsetZ = (Math.random() * 3) - 1;   // Random number between -1 and 1
             const offsetVector = new CANNON.Vec3(offsetX, offsetY, offsetZ);
 
@@ -157,7 +147,7 @@ class Water extends Group {
             // making the sphere particles (physical)
             const pbody = new CANNON.Body({ // particle body
                 mass: 1,
-                shape: new CANNON.Sphere(radius), // shape of the object's collision volume
+                shape: new CANNON.Sphere(radius - 0.25), // shape of the object's collision volume
                 material: new CANNON.Material({friction: 0.1, restitution: 0.5}),
                 linearDamping: 0.2,
                 fixedRotation: false, // disables forced rotation due to collision
@@ -192,10 +182,43 @@ class Water extends Group {
         let playerBody = null;
         if (this.parent.bodyIDToString[event.contact.bi.id] == "Player") playerBody = event.contact.bi;
         else if (this.parent.bodyIDToString[event.contact.bj.id] == "Player") playerBody = event.contact.bj;
-
+        
         if (playerBody != null) { // damage the player (touching seafloor) 
             this.parent.player.loseHealth(1);
         }
+
+        /*if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle" && this.parent.bodyIDToString[event.contact.bi.id] == "WaterParticle") {
+            let base = 0.5, decayFactor = 2; // initialize parameter variables
+
+            // getting the two sphere three.js objects that collided
+            var sphere1 = this.particles[event.contact.bi.index].particle;
+            var sphere2 = this.particles[event.contact.bj.index].particle;
+  
+            // Updating the vertices of both objects to look as though they are merging
+            const [newVerts1, newVerts2] = updateVerticesOfCloseSpheres(sphere1, sphere2, base, decayFactor);
+            // const oldVerts1 = sphere1.geometry.getAttribute('position').array;
+            const oldVerts1 = sphere1.geometry.vertices;
+
+            for (let i = 0; i < newVerts1.length; i++) {
+                // console.log(oldVerts1[i].x)
+                // console.log(newVerts1[i].x)
+                // if (oldVerts1[i].x != newVerts1[i].x || oldVerts1[i].y != newVerts1[i].y || oldVerts1[i].z != newVerts1[i].z) console.log("Not equal!");
+
+                oldVerts1[i].x = newVerts1[i].x;
+                oldVerts1[i].y = newVerts1[i].y;
+                oldVerts1[i].z = newVerts1[i].z;
+            }
+
+            // Updating the vertices of both objects to look as though they are merging
+            // const oldVerts2 = sphere2.geometry.getAttribute('position').array;
+            const oldVerts2 = sphere2.geometry.vertices;
+
+            for (let i = 0; i < newVerts2.length; i++) {
+                oldVerts2[i].x = newVerts2[i].x;
+                oldVerts2[i].y = newVerts2[i].y;
+                oldVerts2[i].z = newVerts2[i].z;
+            }
+        }*/
     }
 
     update() {
@@ -228,6 +251,70 @@ class Water extends Group {
         this.marchingCubes.update();
     }
 
+}
+
+function exponentialDecay(x, base, decayFactor) {
+  return 1 / (1 + Math.pow(base, decayFactor * x));
+}
+
+function extractVectorVertices(arrayOfCoordinates) {
+  var extractedVectorVertices = [];
+
+  for (let i = 0; i < arrayOfCoordinates.length; i += 3) {
+    extractedVectorVertices.push(
+      new THREE.Vector3(
+        arrayOfCoordinates[i], arrayOfCoordinates[i + 1], arrayOfCoordinates[i + 2]
+      ) // creating a new Vector3 point to add to the list
+    );
+  }
+
+  return extractedVectorVertices;
+}
+
+function updateVerticesOfCloseSpheres(sphere1, sphere2, base, decayFactor) {
+  // console.log(sphere1); console.log(sphere2); // debugging the spheres
+
+  // getting the positions of each of the spheres
+  const position1 = sphere1.position;
+  const position2 = sphere2.position;
+
+  // getting the geometries of each of the spheres
+  const sphere1Geometry = sphere1.geometry;
+  const sphere2Geometry = sphere2.geometry;
+
+  // getting the vertex coordinate values
+//   const sphere1Vertices = sphere1Geometry.getAttribute('position').array;
+//   const sphere2Vertices = sphere2Geometry.getAttribute('position').array;
+
+  // getting the sphere vector array
+//   const sphere1VectorVertices = extractVectorVertices(sphere1Vertices);
+//   const sphere2VectorVertices = extractVectorVertices(sphere2Vertices);
+
+  const sphere1VectorVertices = sphere1Geometry.vertices;
+  const sphere2VectorVertices = sphere2Geometry.vertices;
+
+  const newVerts1 = [];
+  const newVerts2 = [];
+
+  for (let i = 0; i < sphere1VectorVertices.length; i++) {
+    let distance = position2.distanceTo(sphere1VectorVertices[i]); // getting the distance to the other sphere
+    let factor = exponentialDecay(distance, base, decayFactor);
+
+    var direction = sphere1VectorVertices[i].sub(position2);
+
+    newVerts1.push(sphere1VectorVertices[i].clone().add(direction.clone().multiplyScalar(factor)));
+  }
+
+  for (let i = 0; i < sphere2VectorVertices; i++) {
+    let distance = position1.distanceTo(sphere2VectorVertices[i]); // getting the distance to the other sphere
+    let factor = exponentialDecay(distance, base, decayFactor);
+
+    var direction = sphere2VectorVertices[i].sub(position1);
+
+    newVerts2.push(sphere2VectorVertices[i].clone().add(direction.clone().multiplyScalar(factor)));
+  }
+
+  return [newVerts1, newVerts2];
 }
 
 export default Water;

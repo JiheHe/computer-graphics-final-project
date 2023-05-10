@@ -182,6 +182,16 @@ class GameScene extends Scene {
         // const waterFloorContactMaterial = new CANNON.ContactMaterial(landMaterial, waterMaterial, {friction: 0, restitution: 1});
         // this.state.world.addContactMaterial(waterFloorContactMaterial); 
 
+        // creating particle system FIRST
+        const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
+        const water = new Water(
+            this,                       // passing in the parent class
+            new CANNON.Vec3(0, 3, 6),   // starting position of stream of water
+            125,                        // number of particles
+            waterMaterial,              // 
+            0.75
+        );
+
         // Add meshes to scene (CONVENTION: use this.player = player after)
         const player = new Player(this, new CANNON.Vec3(6, 3, 6), characterMaterial); // the player; can specify its starting position
         this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
@@ -213,16 +223,6 @@ class GameScene extends Scene {
         //     new Vector3(3, 18, 3));
 
         const building1 = new Building1(this, true, new CANNON.Vec3(8, -0.05, 8), skyscraperMaterial); // an example of size/loc visualization
-
-        // creating particle system
-        const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
-        const water = new Water(
-            this,                       // passing in the parent class
-            new CANNON.Vec3(0, 3, 6),   // starting position of stream of water
-            100,                        // number of particles
-            waterMaterial,              // 
-            1
-        );
 
         this.add(land, player, lights, water, 
             building1);

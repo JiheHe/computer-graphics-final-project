@@ -100,44 +100,44 @@ class Land extends Group {
             this.position.add(this.state.colliderOffset);
 
             // // Spawn in sea level riser box (too lazy to do a helper)
-            // const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
-            // bufferGeometry.computeBoundingBox();
-            // const boundingBox = bufferGeometry.boundingBox;
-            // // physical
-            // const shape = new CANNON.Box(new CANNON.Vec3((boundingBox.max.x - boundingBox.min.x) / 2, 0.25, (boundingBox.max.z - boundingBox.min.z) / 2));
-            // const body = new CANNON.Body({  // invisible collider properties
-            //     mass: 0,  // static
-            //     shape: shape,
-            //     material: new CANNON.Material({friction: 0.5, restitution: 0.5}),
-            //     position: new CANNON.Vec3(startingPos.x, riserLandY.start, startingPos.z),
-            //     collisionFilterGroup: 0b100000, 
-            //     collisionFilterMask: 0b010001, // Only collides with player and water particles
-            // });
-            // body.updateMassProperties(); // Need to call this after setting up the parameters.
-            // parent.bodyIDToString[body.id] = "SeaLevel";
-            // parent.state.world.addBody(body);
-            // // visual
-            // const geometry = new BoxGeometry(
-            //     (boundingBox.max.x - boundingBox.min.x), // don't forget to *2 since half-size
-            //     0.25 * 2,
-            //     (boundingBox.max.z - boundingBox.min.z)
-            // );
-            // const material = new MeshBasicMaterial({
-            //     color: 0x0000ff,
-            //     transparent: true,
-            //     opacity: 1,
-            // });
-            // const mesh = new Mesh(geometry, material);
-            // mesh.position.copy(body.position);
-            // mesh.quaternion.copy(body.quaternion);
-            // parent.add(mesh);
-            // this.landRiser = {mesh, body};
+            const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
+            bufferGeometry.computeBoundingBox();
+            const boundingBox = bufferGeometry.boundingBox;
+            // physical
+            const shape = new CANNON.Box(new CANNON.Vec3((boundingBox.max.x - boundingBox.min.x) / 2, 0.25, (boundingBox.max.z - boundingBox.min.z) / 2));
+            const body = new CANNON.Body({  // invisible collider properties
+                mass: 0,  // static
+                shape: shape,
+                material: new CANNON.Material({friction: 0.5, restitution: 0.5}),
+                position: new CANNON.Vec3(startingPos.x, riserLandY.start, startingPos.z),
+                collisionFilterGroup: 0b100000, 
+                collisionFilterMask: 0b010001, // Only collides with player and water particles
+            });
+            body.updateMassProperties(); // Need to call this after setting up the parameters.
+            parent.bodyIDToString[body.id] = "SeaLevel";
+            parent.state.world.addBody(body);
+            // visual
+            const geometry = new BoxGeometry(
+                (boundingBox.max.x - boundingBox.min.x), // don't forget to *2 since half-size
+                0.25 * 2,
+                (boundingBox.max.z - boundingBox.min.z)
+            );
+            const material = new MeshBasicMaterial({
+                color: 0x0000ff,
+                transparent: true,
+                opacity: 1,
+            });
+            const mesh = new Mesh(geometry, material);
+            mesh.position.copy(body.position);
+            mesh.quaternion.copy(body.quaternion);
+            parent.add(mesh);
+            this.landRiser = {mesh, body};
 
-            // // Add a collision event listener to the building's MAIN physics body
-            // // this.objectInContact = [];
-            // // parent.state.world.addEventListener("beginContact", this.handleContact.bind(this));
-            // // parent.state.world.addEventListener("endContact", this.handleDetact.bind(this));
-            // body.addEventListener("collide", this.handleContact.bind(this));
+            // Add a collision event listener to the building's MAIN physics body
+            // this.objectInContact = [];
+            // parent.state.world.addEventListener("beginContact", this.handleContact.bind(this));
+            // parent.state.world.addEventListener("endContact", this.handleDetact.bind(this));
+            body.addEventListener("collide", this.handleContact.bind(this));
         });
 
         // Add self to parent's update list
