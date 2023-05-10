@@ -144,7 +144,7 @@ class GameScene extends Scene {
         screen.id = "survivedScreen";
         document.body.appendChild(screen);
 
-        this.gameState == GAMESTATE_ROUNDFINISHED;
+        this.gameState = GAMESTATE_ROUNDFINISHED;
         this.pauseResumeButton.__li.firstElementChild.textContent = "You have passed this level";
         this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
     }
@@ -173,7 +173,7 @@ class GameScene extends Scene {
         screen.id = "failedScreen";
         document.body.appendChild(screen);
 
-        this.gameState == GAMESTATE_ROUNDFINISHED;
+        this.gameState = GAMESTATE_ROUNDFINISHED;
         this.pauseResumeButton.__li.firstElementChild.textContent = "You have passed this level";
         this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
     }

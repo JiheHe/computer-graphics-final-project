@@ -372,7 +372,7 @@ class Land extends Group {
             let timeRatio = this.parentObj.gameTimer.timeElapsedInSeconds() / this.parentObj.numSecondsToSurvive;
             this.landRiser.body.position.y = this.riserLandY.start + (this.riserLandY.end - this.riserLandY.start) * timeRatio;
             this.landRiser.mesh.position.copy(this.landRiser.body.position);
-            console.log(this.landRiser.meshVolume);
+            // console.log(this.landRiser.meshVolume);
         }
 
         // Position and scale the grass blade instances randomly.
