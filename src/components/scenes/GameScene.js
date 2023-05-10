@@ -227,7 +227,7 @@ class GameScene extends Scene {
         // const buildingVisualization11 = new Skyscraper(this, false, new CANNON.Vec3(-2, 9, 0), skyscraperMaterial,
         //     new Vector3(3, 18, 3));
 
-        const building1 = new BuildingI(this, true, new CANNON.Vec3(8, -0.05, 8), skyscraperMaterial, 1, 100); // an example of size/loc visualization
+        const building1 = new BuildingI(this, true, new CANNON.Vec3(8, -0.05, 8), skyscraperMaterial, 2, 100); // an example of size/loc visualization
 
         this.add(land, player, lights, water, 
             building1);

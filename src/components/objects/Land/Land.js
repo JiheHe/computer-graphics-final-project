@@ -137,7 +137,7 @@ class Land extends Group {
             const material = new MeshBasicMaterial({
                 color: 0x0000ff,
                 transparent: true,
-                opacity: 1,
+                opacity: 0.8,
             });
 
             const mesh = new Mesh(geometry, material); // creating the final mesh to display
