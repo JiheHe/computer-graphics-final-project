@@ -183,14 +183,17 @@ class GameScene extends Scene {
         // this.state.world.addContactMaterial(waterFloorContactMaterial); 
 
         // creating particle system FIRST
+        let numberOfParticles = 125, sizeOfParticle = 0.75, physicalOffset = 0.25;
+        const startingPosition = new CANNON.Vec3(12, 1, 0);
         const waterMaterial = new CANNON.Material({friction: 0, restitution: 1});
         const water = new Water(
-            this,                       // passing in the parent class
-            new CANNON.Vec3(0, 3, 6),   // starting position of stream of water
-            125,                        // number of particles
-            waterMaterial,              // 
-            0.75
-        );
+            this,               // passing in the parent class
+            startingPosition,   // starting position of stream of water
+            numberOfParticles,  // number of particles
+            waterMaterial,      // the material to use for the water
+            sizeOfParticle,     // the size of the particle
+            physicalOffset      // the physical offset for the radius of the physical body
+        ); // creating a new Water object to spawn water particles
 
         // Add meshes to scene (CONVENTION: use this.player = player after)
         const player = new Player(this, new CANNON.Vec3(6, 3, 6), characterMaterial); // the player; can specify its starting position
@@ -199,9 +202,11 @@ class GameScene extends Scene {
             {wallHeight: 5000, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
             {start: -1, end: 10}); // start and end Y value of the rising platform that simulates rising tide  
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
+        
         // Sihoulette
         const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(3, 1, 8), skyscraperMaterial,
              new Vector3(3, 4, 3)); // an example of size/loc visualization
+        
         // const buildingVisualization2 = new Skyscraper(this, false, new CANNON.Vec3(8, 0, 8), skyscraperMaterial, new Vector3(2, 2, 2));
         // const buildingVisualization3 = new Skyscraper(this, false, new CANNON.Vec3(-2, 3, 6), skyscraperMaterial,
         //     new Vector3(2, 6, 2));

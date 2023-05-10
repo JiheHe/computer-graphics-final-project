@@ -103,6 +103,7 @@ class Land extends Group {
             const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
             bufferGeometry.computeBoundingBox();
             const boundingBox = bufferGeometry.boundingBox;
+            console.log(boundingBox);
             // physical
             const shape = new CANNON.Box(new CANNON.Vec3((boundingBox.max.x - boundingBox.min.x) / 2, 0.25, (boundingBox.max.z - boundingBox.min.z) / 2));
             const body = new CANNON.Body({  // invisible collider properties

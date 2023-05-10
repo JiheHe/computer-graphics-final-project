@@ -84,8 +84,12 @@ function getNearestNeighbors(particle, particles, searchRadius) {
 
 class Water extends Group {
     constructor (
-        parent, startingPosition, numberOfParticles, waterMaterial, radius,
-        // adding physics parameters
+        parent,             // the parent
+        startingPosition,   // the starting position cannon.js object
+        numberOfParticles,  // the number of particles to spawn
+        waterMaterial,      // the material of the water
+        radius,             // the radius of the three.js sphere (water particle)
+        physicalOffset,     // the offset for the radius of the physical body
     ) {
         super(); // inherit parent class Group properties
 
@@ -136,9 +140,9 @@ class Water extends Group {
             const particle = new THREE.Mesh(sphere, waterMaterial)
 
             // generating a random starting position for each ball
-            const offsetX = (Math.random() * 3) - 1;   // Random number between -1 and 1
-            const offsetY = (Math.random() * 20) - 1;   // Random number between -1 and 1
-            const offsetZ = (Math.random() * 3) - 1;   // Random number between -1 and 1
+            const offsetX = (Math.random() * 2) - 3;   // Random number between -1 and 1
+            const offsetY = (Math.random() * 5);   // Random number between -1 and 1
+            const offsetZ = (Math.random() * 20) - 10;   // Random number between -1 and 1
             const offsetVector = new CANNON.Vec3(offsetX, offsetY, offsetZ);
 
             // Add the offset vector to your original vector
