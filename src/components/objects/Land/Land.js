@@ -229,6 +229,12 @@ class Land extends Group {
             parent.add(mesh);
 
             this.landRiser = {mesh, body};
+            
+            // Add a collision event listener to the building's MAIN physics body
+            // this.objectInContact = [];
+            // parent.state.world.addEventListener("beginContact", this.handleContact.bind(this));
+            // parent.state.world.addEventListener("endContact", this.handleDetact.bind(this));
+            body.addEventListener("collide", this.handleContact.bind(this));
 
             // #################################
             // ### adding grass to the scene ###
@@ -245,12 +251,6 @@ class Land extends Group {
             // console.log(instancedMesh);
 
             // parent.add( this.instancedMesh );*/
-
-            // Add a collision event listener to the building's MAIN physics body
-            // this.objectInContact = [];
-            // parent.state.world.addEventListener("beginContact", this.handleContact.bind(this));
-            // parent.state.world.addEventListener("endContact", this.handleDetact.bind(this));
-            body.addEventListener("collide", this.handleContact.bind(this));
         });
 
         // Add self to parent's update list
