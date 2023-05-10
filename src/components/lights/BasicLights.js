@@ -6,7 +6,8 @@ class BasicLights extends Group {
         super(...args);
 
         // Simulating the front facing sun
-        const sun1 = new SpotLight(0xffffff, 2, 100, 2, 1, 1);
+        // slots after the color: intensity,
+        const sun1 = new SpotLight(0xffffff, 2, 60, 2, 1, 1);
         sun1.position.set(-15, 50, -15);
         sun1.target.position.set(-7, 0, 0);
         // const sun2 = new SpotLight().copy(sun1);
