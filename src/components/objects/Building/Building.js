@@ -283,7 +283,6 @@ class Building extends Group {
     for (let i = 0; i < childObjs.length; i++) {
       let childObj = childObjs[i]; // current piece.
       if (!childObj.name.includes("cell")) { // the one main piece, following the convention
-        console.log("1 main mesh found");
         mainBuilding = childObj;
         childObj.traverse((child) => { 
           if (child.isMesh) {
