@@ -103,7 +103,11 @@ class Land extends Group {
             const bufferGeometry = gltf.scene.children[0].geometry; // assume buffered geometry.
             bufferGeometry.computeBoundingBox();
             const boundingBox = bufferGeometry.boundingBox;
-            // physical
+
+            // ##################################################
+            // ### physical side of the rising sea level mesh ###
+            // ##################################################
+
             const shape = new CANNON.Box(new CANNON.Vec3((boundingBox.max.x - boundingBox.min.x) / 2, 0.25, (boundingBox.max.z - boundingBox.min.z) / 2));
             const body = new CANNON.Body({  // invisible collider properties
                 mass: 0,  // static
@@ -113,21 +117,33 @@ class Land extends Group {
                 collisionFilterGroup: 0b100000, 
                 collisionFilterMask: 0b010001, // Only collides with player and water particles
             });
+            
             body.updateMassProperties(); // Need to call this after setting up the parameters.
+            
             parent.bodyIDToString[body.id] = "SeaLevel";
             parent.state.world.addBody(body);
-            // visual
-            const geometry = new BoxGeometry(
-                (boundingBox.max.x - boundingBox.min.x), // don't forget to *2 since half-size
-                0.25 * 2,
-                (boundingBox.max.z - boundingBox.min.z)
-            );
+
+            // ################################################
+
+            // ################################################
+            // ### visual side of the rising sea level mesh ###
+            // ################################################
+
+            let width = (boundingBox.max.x - boundingBox.min.x) - 0.1;
+            let height = 0.1;
+            let depth = (boundingBox.max.z - boundingBox.min.z) - 0.1
+
+            const geometry = new BoxGeometry(width, height, depth);
             const material = new MeshBasicMaterial({
                 color: 0x0000ff,
                 transparent: true,
                 opacity: 1,
             });
-            const mesh = new Mesh(geometry, material);
+
+            const mesh = new Mesh(geometry, material); // creating the final mesh to display
+
+            // ################################################
+
             mesh.position.copy(body.position);
             mesh.quaternion.copy(body.quaternion);
             parent.add(mesh);
