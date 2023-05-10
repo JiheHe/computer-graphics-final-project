@@ -2,6 +2,7 @@ import { Group, Box3, Face3, Vector3, Quaternion } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
 import MODEL from './land.gltf';
+import * as THREE from 'three';
 import { BoxGeometry, MeshBasicMaterial, Mesh, Geometry } from 'three';
 import { createConvexPolyhedronFromGeometry, mergeVerticesAndFaces } from '../Building/Building.js';
 
@@ -26,6 +27,68 @@ function createBoxColliderMesh(landBody) { // A helper function for visualizing 
 
     return mesh;
 }
+
+/////////////////
+// GRASS MATERIAL
+/////////////////
+
+const clock = new THREE.Clock();
+
+const vertexShader = `
+  varying vec2 vUv;
+  uniform float time;
+  
+	void main() {
+
+    vUv = uv;
+    
+    // VERTEX POSITION
+    
+    vec4 mvPosition = vec4( position, 1.0 );
+    #ifdef USE_INSTANCING
+    	mvPosition = instanceMatrix * mvPosition;
+    #endif
+    
+    // DISPLACEMENT
+    
+    // here the displacement is made stronger on the blades tips.
+    float dispPower = 1.0 - cos( uv.y * 3.1416 / 2.0 );
+    
+    float displacement = sin( mvPosition.z + time * 10.0 ) * ( 0.1 * dispPower );
+    mvPosition.z += displacement;
+    
+    //
+    
+    vec4 modelViewPosition = modelViewMatrix * mvPosition;
+    gl_Position = projectionMatrix * modelViewPosition;
+
+	}
+`;
+
+const fragmentShader = `
+  varying vec2 vUv;
+  
+  void main() {
+  	vec3 baseColor = vec3( 0.41, 1.0, 0.5 );
+    float clarity = ( vUv.y * 0.5 ) + 0.5;
+    gl_FragColor = vec4( baseColor * clarity, 1 );
+  }
+`;
+
+const uniforms = {
+	time: {
+  	value: 0
+  }
+}
+
+const leavesMaterial = new THREE.ShaderMaterial({
+	vertexShader,
+  fragmentShader,
+  uniforms,
+  side: THREE.DoubleSide
+});
+
+
 
 /*function createVisualFromCannonBody(scene, shape, body, materialOptions) {
     // convert the vertices to THREE.Vector3
@@ -129,6 +192,23 @@ class Land extends Group {
             // ### visual side of the rising sea level mesh ###
             // ################################################
 
+            // Water
+            // const waterGeometry = new THREE.PlaneGeometry(24, 24);
+            // water = new Water(waterGeometry, {
+            //     textureWidth: 512,
+            //     textureHeight: 512,
+            //     waterNormals: new THREE.TextureLoader().load('textures/waternormals.jpg', function (texture) {
+            //         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            //     }),
+            //     sunDirection: new THREE.Vector3(),
+            //     sunColor: 0xffffff,
+            //     waterColor: 0x001e0f,
+            //     distortionScale: 3.7,
+            //     fog: scene.fog !== undefined
+            // });
+            // water.rotation.x = -Math.PI / 2;
+            // scene.add(water);
+
             let width = (boundingBox.max.x - boundingBox.min.x) - 0.1;
             let height = 0.1;
             let depth = (boundingBox.max.z - boundingBox.min.z) - 0.1
@@ -147,7 +227,24 @@ class Land extends Group {
             mesh.position.copy(body.position);
             mesh.quaternion.copy(body.quaternion);
             parent.add(mesh);
+
             this.landRiser = {mesh, body};
+
+            // #################################
+            // ### adding grass to the scene ###
+            // #################################
+
+            this.instanceNumber = 5000;
+            this.dummy = new THREE.Object3D();
+
+            const grassGeometry = new THREE.PlaneGeometry( 1000, 1000, 1000, 4 );
+            grassGeometry.translate( 0, 0.5, 0 ); // move grass blade geometry lowest point at 0.
+
+            this.instancedMesh = new THREE.InstancedMesh( grassGeometry, leavesMaterial, this.instanceNumber );
+
+            // console.log(instancedMesh);
+
+            // parent.add( this.instancedMesh );
 
             // Add a collision event listener to the building's MAIN physics body
             // this.objectInContact = [];
@@ -275,6 +372,32 @@ class Land extends Group {
             this.landRiser.body.position.y = this.riserLandY.start + (this.riserLandY.end - this.riserLandY.start) * timeRatio;
             this.landRiser.mesh.position.copy(this.landRiser.body.position);
         }
+
+        // Position and scale the grass blade instances randomly.
+        if (this.instancedMesh) {
+            for ( let i=0 ; i<this.instanceNumber ; i++ ) {
+
+                this.dummy.position.set(
+                    ( Math.random() - 0.5 ) * 10,
+                    0,
+                    ( Math.random() - 0.5 ) * 10
+                );
+                
+                this.dummy.scale.setScalar( 0.5 + Math.random() * 0.5 );
+                
+                this.dummy.rotation.y = Math.random() * Math.PI;
+                
+                this.dummy.updateMatrix();
+                this.instancedMesh.setMatrixAt( i, this.dummy.matrix );
+    
+            }
+        }
+
+        	// Hand a time variable to vertex shader for wind displacement.
+	    leavesMaterial.uniforms.time.value = clock.getElapsedTime();
+        leavesMaterial.uniformsNeedUpdate = true;
+
+        //
 
         /*console.log(this.objectInContact);
         for (let i = 0; i < this.objectInContact.length; i++) {
