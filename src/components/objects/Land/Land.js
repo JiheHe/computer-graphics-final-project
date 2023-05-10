@@ -169,10 +169,10 @@ class Land extends Group {
             playerBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), 1000, randomInclusive(0, 100)), playerBody.position); // for retriggering
         }
 
-        if (waterParticleBody != null) { // distorts the water a bit
-            waterParticleBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), randomInclusive(150, 250), randomInclusive(0, 100)), waterParticleBody.position);
-            if (waterParticleBody.collisionFilterMask == -1) waterParticleBody.collisionFilterMask = 0b101111;
-        }
+        // if (waterParticleBody != null) { // distorts the water a bit
+        //     waterParticleBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), randomInclusive(150, 250), randomInclusive(0, 100)), waterParticleBody.position);
+        //     if (waterParticleBody.collisionFilterMask == -1) waterParticleBody.collisionFilterMask = 0b101111;
+        // }
     }
 
     /*handleDetact(event) {

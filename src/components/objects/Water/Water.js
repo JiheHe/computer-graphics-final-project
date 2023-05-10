@@ -228,6 +228,7 @@ class Water extends Group {
                 oldVerts2[i].y = newVerts2[i].y;
                 oldVerts2[i].z = newVerts2[i].z;
             }
+        }
     }
 
     update() {
