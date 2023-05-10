@@ -210,10 +210,10 @@ class Land extends Group {
             // scene.add(water);
 
             let width = (boundingBox.max.x - boundingBox.min.x) - 0.1;
-            let height = 0.1;
+            this.startingHeight = 0.1;
             let depth = (boundingBox.max.z - boundingBox.min.z) - 0.1
 
-            let geometry = new BoxGeometry(width, height, depth);
+            let geometry = new BoxGeometry(width, this.startingHeight, depth);
             let material = new MeshBasicMaterial({
                 color: 0x0000ff,
                 transparent: true,
@@ -228,6 +228,9 @@ class Land extends Group {
             mesh.position.copy(body.position);
             mesh.quaternion.copy(body.quaternion);
             parent.add(mesh);
+            meshVolume.position.copy(body.position);
+            meshVolume.quaternion.copy(body.quaternion);
+            parent.add(meshVolume);
 
             this.landRiser = {mesh, body, meshVolume};
             
@@ -368,11 +371,28 @@ class Land extends Group {
     }*/
 
     update() {
-        if (this.landRiser) { // if exists, then rise land from start to end proprotional to current time elapsed.
+        /*if (this.landRiser) { // if exists, then rise land from start to end proprotional to current time elapsed.
             let timeRatio = this.parentObj.gameTimer.timeElapsedInSeconds() / this.parentObj.numSecondsToSurvive;
             this.landRiser.body.position.y = this.riserLandY.start + (this.riserLandY.end - this.riserLandY.start) * timeRatio;
             this.landRiser.mesh.position.copy(this.landRiser.body.position);
             // console.log(this.landRiser.meshVolume);
+        }*/
+
+        if (this.landRiser) {
+            let timeRatio = this.parentObj.gameTimer.timeElapsedInSeconds() / this.parentObj.numSecondsToSurvive;
+            let newYPosition = this.riserLandY.start + (this.riserLandY.end - this.riserLandY.start) * timeRatio;
+            
+            // Update the position of landRiser.mesh and landRiser.body
+            this.landRiser.body.position.y = newYPosition;
+            this.landRiser.mesh.position.y = newYPosition;
+            
+            // Adjust the height of landRiser.meshVolume and reposition it
+            // so its base stays at the same y position
+            let volumeHeight = newYPosition - this.riserLandY.start;
+            this.landRiser.meshVolume.scale.y = volumeHeight / this.startingHeight; // the original height of the meshVolume
+
+            // Reposition it so the base stays at the same y position
+            this.landRiser.meshVolume.position.y = this.riserLandY.start + volumeHeight / 2;
         }
 
         // Position and scale the grass blade instances randomly.

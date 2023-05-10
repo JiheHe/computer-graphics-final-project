@@ -278,7 +278,7 @@ class GameScene extends Scene {
         const player = new Player(this, new CANNON.Vec3(8, 2, 8), characterMaterial); // the player; can specify its starting position: 0.2, 1.6, 8
         this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
         const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
-            {wallHeight: 200, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
+            {wallHeight: 200, wallTurnOffIndexList: [], isVisible: false}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
             {start: -2, end: 18}); // start and end Y value of the rising platform that simulates rising tide  
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
         
