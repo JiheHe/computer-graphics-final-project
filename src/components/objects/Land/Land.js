@@ -213,14 +213,15 @@ class Land extends Group {
             let height = 0.1;
             let depth = (boundingBox.max.z - boundingBox.min.z) - 0.1
 
-            const geometry = new BoxGeometry(width, height, depth);
-            const material = new MeshBasicMaterial({
+            let geometry = new BoxGeometry(width, height, depth);
+            let material = new MeshBasicMaterial({
                 color: 0x0000ff,
                 transparent: true,
                 opacity: 0.8,
             });
 
             const mesh = new Mesh(geometry, material); // creating the final mesh to display
+            let meshVolume = new Mesh(geometry, material);
 
             // ################################################
 
@@ -228,7 +229,7 @@ class Land extends Group {
             mesh.quaternion.copy(body.quaternion);
             parent.add(mesh);
 
-            this.landRiser = {mesh, body};
+            this.landRiser = {mesh, body, meshVolume};
             
             // Add a collision event listener to the building's MAIN physics body
             // this.objectInContact = [];
@@ -371,6 +372,7 @@ class Land extends Group {
             let timeRatio = this.parentObj.gameTimer.timeElapsedInSeconds() / this.parentObj.numSecondsToSurvive;
             this.landRiser.body.position.y = this.riserLandY.start + (this.riserLandY.end - this.riserLandY.start) * timeRatio;
             this.landRiser.mesh.position.copy(this.landRiser.body.position);
+            console.log(this.landRiser.meshVolume);
         }
 
         // Position and scale the grass blade instances randomly.

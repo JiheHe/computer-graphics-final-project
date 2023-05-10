@@ -16,6 +16,7 @@ import nz1 from './nz.jpg'
 const GAMESTATE_INGAME = 1;
 const GAMESTATE_PAUSED = 2;
 const GAMESTATE_NOTINGAME = 3;
+const GAMESTATE_ROUNDFINISHED = 4;
 
 class GameScene extends Scene {
     constructor(camera, sharedState) {
@@ -79,13 +80,12 @@ class GameScene extends Scene {
         if (this.gameState == GAMESTATE_NOTINGAME) { // start the session
             // console.log("Game starts!");
             // game starts, can spawn waves and stuff. 
-            // TODO
             this.gameTimer.startTimer();
             this.startGameButton.__li.firstElementChild.textContent = "DISABLED: pause game first";
             this.gameState = GAMESTATE_INGAME; // for now
         }
         // okay we COULD include  || this.gameState == GAMESTATE_INGAME for reloading too, but fatfinger syndrome is a thing so...
-        else if (this.gameState == GAMESTATE_PAUSED) { // reloads the current level
+        else if (this.gameState == GAMESTATE_PAUSED || this.gameState == GAMESTATE_ROUNDFINISHED) { // reloads the current level
             // Right now, this scene is gone, and a new copy takes over, so doesn't matter anymore.
             this.state.gui.destroy(); // destroy the current GUI
             this.sharedState.scene = new GameScene(this.camera, this.sharedState); // replace this scene itself with a new scene
@@ -144,7 +144,9 @@ class GameScene extends Scene {
         screen.id = "survivedScreen";
         document.body.appendChild(screen);
 
-        this.pauseResumeGameplay(); // for now
+        this.gameState == GAMESTATE_ROUNDFINISHED;
+        this.pauseResumeButton.__li.firstElementChild.textContent = "You have passed this level";
+        this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
     }
 
     stageFailed() { // the user ran out of health before timer ends.
@@ -171,7 +173,9 @@ class GameScene extends Scene {
         screen.id = "failedScreen";
         document.body.appendChild(screen);
 
-        this.pauseResumeGameplay(); // for now
+        this.gameState == GAMESTATE_ROUNDFINISHED;
+        this.pauseResumeButton.__li.firstElementChild.textContent = "You have passed this level";
+        this.startGameButton.__li.firstElementChild.textContent = "Reload Game";
     }
 
     addToUpdateList(object) {
@@ -222,12 +226,6 @@ class GameScene extends Scene {
                     // this.player.loseHealth(); // just for example.
                 }
                 break;
-
-            case GAMESTATE_NOTINGAME:
-                break;
-            
-            case GAMESTATE_PAUSED:
-                break;
         }
     }
 
@@ -243,8 +241,6 @@ class GameScene extends Scene {
             nz1
         ]);
         this.background = texture;
-
-        // this.rotation.y = 90 * Math.PI / 180; // Rotate 90 degrees
 
         // Set background to a nice color
         // this.background = new Color(0x7ec0ee);
