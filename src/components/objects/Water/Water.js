@@ -202,32 +202,32 @@ class Water extends Group {
         }
 
         if (this.parent.bodyIDToString[event.contact.bj.id] == "WaterParticle" ) {
-            let base = 0.5, decayFactor = 2; // initialize parameter variables
+            // let base = 0.5, decayFactor = 2; // initialize parameter variables
 
-            // getting the two sphere three.js objects that collided
-            var sphere1 = this.particles[event.contact.bi.index - 1].particle;
-            var sphere2 = this.particles[event.contact.bj.index - 1].particle;
+            // // getting the two sphere three.js objects that collided
+            // var sphere1 = this.particles[event.contact.bi.index - 1].particle;
+            // var sphere2 = this.particles[event.contact.bj.index - 1].particle;
 
-            // Updating the vertices of both objects to look as though they are merging
-            const [newVerts1, newVerts2] = updateVerticesOfCloseSpheres(sphere1, sphere2, base, decayFactor);
-            // const oldVerts1 = sphere1.geometry.getAttribute('position').array;
-            const oldVerts1 = sphere1.geometry.vertices;
+            // // Updating the vertices of both objects to look as though they are merging
+            // const [newVerts1, newVerts2] = updateVerticesOfCloseSpheres(sphere1, sphere2, base, decayFactor);
+            // // const oldVerts1 = sphere1.geometry.getAttribute('position').array;
+            // const oldVerts1 = sphere1.geometry.vertices;
 
-            for (let i = 0; i < newVerts1.length; i++) {
-                oldVerts1[i].x = newVerts1[i].x;
-                oldVerts1[i].y = newVerts1[i].y;
-                oldVerts1[i].z = newVerts1[i].z;
-            }
+            // for (let i = 0; i < newVerts1.length; i++) {
+            //     oldVerts1[i].x = newVerts1[i].x;
+            //     oldVerts1[i].y = newVerts1[i].y;
+            //     oldVerts1[i].z = newVerts1[i].z;
+            // }
 
-            // Updating the vertices of both objects to look as though they are merging
-            // const oldVerts2 = sphere2.geometry.getAttribute('position').array;
-            const oldVerts2 = sphere2.geometry.vertices;
+            // // Updating the vertices of both objects to look as though they are merging
+            // // const oldVerts2 = sphere2.geometry.getAttribute('position').array;
+            // const oldVerts2 = sphere2.geometry.vertices;
 
-            for (let i = 0; i < newVerts2.length; i++) {
-                oldVerts2[i].x = newVerts2[i].x;
-                oldVerts2[i].y = newVerts2[i].y;
-                oldVerts2[i].z = newVerts2[i].z;
-            }
+            // for (let i = 0; i < newVerts2.length; i++) {
+            //     oldVerts2[i].x = newVerts2[i].x;
+            //     oldVerts2[i].y = newVerts2[i].y;
+            //     oldVerts2[i].z = newVerts2[i].z;
+            // }
         }
     }
 
