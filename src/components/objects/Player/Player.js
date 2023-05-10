@@ -356,6 +356,18 @@ class Player extends Group {
             this.lastLoseHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
         }
     }
+
+      // Just a different variable system.
+    loseHealthBig(amt = 1, loseHpCooldown = 1) { // building loses health... called for example by collision event between building and water
+        if (!this.lastLoseBigHealthAt) {
+            this.health -= amt;
+            this.lastLoseBigHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+        }
+        else if (this.parentObj.gameTimer.timeElapsedInSeconds() - this.lastLoseBigHealthAt >= loseHpCooldown) {
+            this.health -= amt;
+            this.lastLoseBigHealthAt = this.parentObj.gameTimer.timeElapsedInSeconds();
+        }
+    }
 }
 
 export default Player;

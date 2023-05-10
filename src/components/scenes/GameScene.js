@@ -53,7 +53,7 @@ class GameScene extends Scene {
         // Populate GUI
         this.startGameButton = this.state.gui.add(this.guiControls, "startGame").name("Start Game");
         this.pauseResumeButton = this.state.gui.add(this.guiControls, "pauseGame").name("Pause Game");
-        this.state.gui.add(this.state, 'volume', 0, 1);
+        // this.state.gui.add(this.state, 'volume', 0, 1);
         document.getElementsByClassName("dg ac")[0].style.zIndex = "1000"; // setting the z-index of the GUI DomElement, so that we can restart at the end
 
         // Add event listeners for keydown and keyup events (basically key press and key lift)
@@ -262,7 +262,7 @@ class GameScene extends Scene {
         this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
         const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
             {wallHeight: 200, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
-            {start: -1, end: 10}); // start and end Y value of the rising platform that simulates rising tide  
+            {start: -2, end: 18}); // start and end Y value of the rising platform that simulates rising tide  
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
         
         // Sihoulette made by Eunice

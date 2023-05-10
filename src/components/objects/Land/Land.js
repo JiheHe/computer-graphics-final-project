@@ -344,7 +344,7 @@ class Land extends Group {
         else if (this.parentObj.bodyIDToString[event.contact.bj.id] == "WaterParticle") waterParticleBody = event.contact.bj;
 
         if (playerBody != null) { // damage the player (touching seafloor) 
-            this.parentObj.player.loseHealth(10);
+            this.parentObj.player.loseHealthBig(50, 1);
             playerBody.applyForce(new CANNON.Vec3(randomInclusive(0, 100), 1000, randomInclusive(0, 100)), playerBody.position); // for retriggering
         }
 
