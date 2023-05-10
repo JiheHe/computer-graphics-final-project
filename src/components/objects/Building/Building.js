@@ -24,49 +24,58 @@ import BUILDING2 from './building2.gltf';
 // import BUILDING15 from './building15.gltf';
 // import BUILDING16 from './building16.gltf';
 // import BUILDING17 from './building17.gltf';
-// import BUILDING18 from './building18.gltf';
+import BUILDING18 from './building18.gltf';
 // import BUILDING19 from './building19.gltf';
-// import BUILDING20 from './building20.gltf';
+import BUILDING20 from './building20.gltf';
 // import BUILDING21 from './building21.gltf';
-// import BUILDING22 from './building22.gltf';
-// import BUILDING23 from './building23.gltf';
+import BUILDING22 from './building22.gltf';
+import BUILDING23 from './building23.gltf';
 // import BUILDING24 from './building24.gltf';
 // import BUILDING25 from './building25.gltf';
 // import BUILDING26 from './building26.gltf';
-// import BUILDING27 from './building27.gltf';
+import BUILDING27 from './building27.gltf';
 // import BUILDING28 from './building28.gltf';
-// import BUILDING29 from './building29.gltf';
+import BUILDING29 from './building29.gltf';
 // import BUILDING30 from './building30.gltf';
 // import BUILDING31 from './building31.gltf';
 // import BUILDING32 from './building32.gltf';
 // import BUILDING33 from './building33.gltf';
 // import BUILDING34 from './building34.gltf';
 // import BUILDING35 from './building35.gltf';
-// import BUILDING36 from './building36.gltf';
+import BUILDING36 from './building36.gltf';
 // import BUILDING37 from './building37.gltf';
 // import BUILDING38 from './building38.gltf';
 // import BUILDING39 from './building39.gltf';
 // import BUILDING40 from './building40.gltf';
 // import BUILDING41 from './building41.gltf';
 // import BUILDING42 from './building42.gltf';
-// import BUILDING43 from './building43.gltf';
+import BUILDING43 from './building43.gltf';
 // import BUILDING44 from './building44.gltf';
 // import BUILDING45 from './building45.gltf';
 // import BUILDING46 from './building46.gltf';
 // import BUILDING47 from './building47.gltf';
 // import BUILDING48 from './building48.gltf';
 // import BUILDING49 from './building49.gltf';
-// import BUILDING50 from './building50.gltf';
+import BUILDING50 from './building50.gltf';
 // import BUILDING51 from './building51.gltf';
 // import BUILDING52 from './building52.gltf';
 // import BUILDING53 from './building53.gltf';
 // import BUILDING54 from './building54.gltf';
 // import BUILDING55 from './building55.gltf';
 // import BUILDING56 from './building56.gltf';
-const BUILDINGS = [
+const BUILDINGS = [ // MUST BE RANKED IN THE ORDER OF USAGE!!!!!!!!!!!!!!!
   null, // Placeholder so array is 1-indexed
   BUILDING1,
   BUILDING2,
+  BUILDING18,
+  BUILDING23,
+  BUILDING43,
+  BUILDING50,
+  BUILDING22,
+  BUILDING29,
+  BUILDING36,
+  BUILDING27,
+  BUILDING20,
   // BUILDING3,
   // BUILDING4,
   // BUILDING5,
@@ -82,39 +91,30 @@ const BUILDINGS = [
   // BUILDING15,
   // BUILDING16,
   // BUILDING17,
-  // BUILDING18,
   // BUILDING19,
-  // BUILDING20,
   // BUILDING21,
-  // BUILDING22,
-  // BUILDING23,
   // BUILDING24,
   // BUILDING25,
   // BUILDING26,
-  // BUILDING27,
   // BUILDING28,
-  // BUILDING29,
   // BUILDING30,
   // BUILDING31,
   // BUILDING32,
   // BUILDING33,
   // BUILDING34,
   // BUILDING35,
-  // BUILDING36,
   // BUILDING37,
   // BUILDING38,
   // BUILDING39,
   // BUILDING40,
   // BUILDING41,
   // BUILDING42,
-  // BUILDING43,
   // BUILDING44,
   // BUILDING45,
   // BUILDING46,
   // BUILDING47,
   // BUILDING48,
   // BUILDING49,
-  // BUILDING50,
   // BUILDING51,
   // BUILDING52,
   // BUILDING53,
@@ -248,7 +248,7 @@ class Building extends Group {
       // visualizing the custom shape
       const geometry = new BoxGeometry(dims.x, dims.y, dims.z);
       const material = new MeshBasicMaterial({
-        color: 0x00ff00,
+        color: 0xff0000,
         transparent: true,
         opacity: 0.5,
       });
@@ -307,7 +307,8 @@ class Building extends Group {
       mass: 0, // mass input parameter. Set it to 0 because a building shouldn't be moving anyway.
       shape: this.shape,
       material: material,
-      position: startingPos,
+      position: startingPos.position,
+      quaternion: startingPos.rotation,
       linearDamping: linearDamping,
       angularDamping: angularDamping,
       fixedRotation: fixedRotation,
@@ -353,7 +354,8 @@ class Building extends Group {
       mass: newMass, // the weighted mass.
       shape: shape,
       material: material,
-      position: new Vector3().copy(object.position).add(startingPos), // object.position.add(startingPos), either one works
+      position: new Vector3().copy(object.position).add(startingPos.position), // object.position.add(startingPos), either one works
+      quaternion: new CANNON.Quaternion().copy(object.quaternion).mult(startingPos.rotation),
       linearDamping: linearDamping,
       angularDamping: angularDamping,
       fixedRotation: fixedRotation,
@@ -502,7 +504,7 @@ class Skyscraper extends Building { // An example of how to make a building type
 }
 
 class BuildingI extends Building {
-  constructor(parent, useModel, startingPos, buildingMaterial, i, health, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 100,
+  constructor(parent, useModel, startingPos, buildingMaterial, i, health, mass = 100, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), 
     linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false) {
 
     super(parent, "building" + i, useModel ? BUILDINGS[i] : null, dimensions, startingPos, mass, buildingMaterial, health,
