@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
 import qh from 'quickhull3d'
 import SKYSCRAPER_MODEL from './skyscraper.gltf'; // import other buildling gltfs here. Make sure to follow the convention!
+import BUILDING1 from './building1.gltf';
 
 export function createConvexPolyhedronFromGeometry(geometry, parent = null) { // a helper function that creates a cannon.js convex polyhedron for a better-fit collider
   let convexVertices = geometry.vertices;
@@ -383,4 +384,13 @@ class Skyscraper extends Building { // An example of how to make a building type
   }
 }
 
-export { Skyscraper }; // using named exports, don't forget to update index.js as well.
+class Building1 extends Building {
+  constructor(parent, useModel, startingPos, buildingMaterial, dimensions = (new Vector3(2, 10, 2)).multiplyScalar(2), mass = 100,
+    linearDamping = 0.5, angularDamping = 0.5, fixedRotation = false) {
+
+    super(parent, "building1", useModel ? BUILDING1 : null, dimensions, startingPos, mass, buildingMaterial, 100,
+      linearDamping, angularDamping, fixedRotation);
+  }
+}
+
+export { Skyscraper, Building1 }; // using named exports, don't forget to update index.js as well.

@@ -1,1 +1,1 @@
-export { Skyscraper } from './Building.js';
+export { Skyscraper, Building1 } from './Building.js';
