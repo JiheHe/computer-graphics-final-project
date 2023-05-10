@@ -258,18 +258,18 @@ class GameScene extends Scene {
         ); // creating a new Water object to spawn water particles
 
         // Add meshes to scene (CONVENTION: use this.player = player after)
-        const player = new Player(this, new CANNON.Vec3(6, 3, 6), characterMaterial); // the player; can specify its starting position
+        const player = new Player(this, new CANNON.Vec3(0.2, 1.6, 8), characterMaterial); // the player; can specify its starting position
         this.player = player; // IMPORTANT: DON'T FORGET THIS LINE!!!!!!!!!!!!!!!!!
         const land = new Land(this, new CANNON.Vec3(0, 0, 0), landMaterial, // the floor; can specify its starting position
-            {wallHeight: 5000, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
+            {wallHeight: 200, wallTurnOffIndexList: [], isVisible: true}, // wallTurnOffIndexList: walls usually go counter-clockwise around the shape
             {start: -1, end: 10}); // start and end Y value of the rising platform that simulates rising tide  
         const lights = new BasicLights(); // the lighting, can prob make more classes etc.
         
         // Sihoulette made by Eunice
-        // const buildingVisualization = new Skyscraper(this, false, new CANNON.Vec3(3, 1, 8), skyscraperMaterial, new Vector3(3, 4, 3)); // an example of size/loc visualization
+        // const buildingVisualization = new Skyscraper(this, false, {position: new CANNON.Vec3(3, 1, 8), rotation: new CANNON.Quaternion()}, skyscraperMaterial, new Vector3(3, 4, 3)); // an example of size/loc visualization
         // const buildingVisualization2 = new Skyscraper(this, false, new CANNON.Vec3(8, 0, 8), skyscraperMaterial, new Vector3(2, 2, 2));
-        // const buildingVisualization3 = new Skyscraper(this, false, new CANNON.Vec3(-2, 3, 6), skyscraperMaterial, new Vector3(2, 6, 2));
-        // const buildingVisualization4 = new Skyscraper(this, false, new CANNON.Vec3(-7, 4, 5), skyscraperMaterial, new Vector3(3, 6, 3));
+        // const buildingVisualization3 = new Skyscraper(this, false, {position: new CANNON.Vec3(-2, 3, 6), rotation: new CANNON.Quaternion()}, skyscraperMaterial, new Vector3(2, 6, 2));
+        // const buildingVisualization4 = new Skyscraper(this, false, {position: new CANNON.Vec3(-7, 4, 5), rotation: new CANNON.Quaternion()}, skyscraperMaterial, new Vector3(3, 6, 3));
         // const buildingVisualization5 = new Skyscraper(this, false, new CANNON.Vec3(-9, 5, 1), skyscraperMaterial, new Vector3(2, 6, 2));
         // const buildingVisualization6 = new Skyscraper(this, false, {position: new CANNON.Vec3(-9, 6, -2), rotation: new CANNON.Quaternion()}, skyscraperMaterial,new Vector3(2, 6, 2));
         // const buildingVisualization7 = new Skyscraper(this, false, {position: new CANNON.Vec3(-7, 7, -4), rotation: new CANNON.Quaternion()}, skyscraperMaterial, new Vector3(4, 8, 4));
@@ -280,15 +280,15 @@ class GameScene extends Scene {
 
         const building1 = new BuildingI(this, true, {position: new CANNON.Vec3(8, -0.05, 8), rotation: new CANNON.Quaternion()}, skyscraperMaterial, 1, 100, 100); // an example of size/loc visualization
         const building2 = new BuildingI(this, true, {position: new CANNON.Vec3(3, 0.4, 8), rotation: new CANNON.Quaternion()}, skyscraperMaterial, 2, 200, 100); // an example of size/loc visualization
-        const building3 = new BuildingI(this, true, {position: new CANNON.Vec3(-2, 1.1, 6), rotation: new CANNON.Quaternion()}, skyscraperMaterial, 3, 300, 100); // an example of size/loc visualization
-        const building4 = new BuildingI(this, true, {position: new CANNON.Vec3(-7, 2.6, 5), rotation: new CANNON.Quaternion()}, skyscraperMaterial, 4, 400, 100); // an example of size/loc visualization
+        const building3 = new BuildingI(this, true, {position: new CANNON.Vec3(-2, 0, 6), rotation: new CANNON.Quaternion()}, skyscraperMaterial, 3, 300, 100); // an example of size/loc visualization
+        const building4 = new BuildingI(this, true, {position: new CANNON.Vec3(-7, 2.4, 5), rotation: new CANNON.Quaternion()}, skyscraperMaterial, 4, 400, 100); // an example of size/loc visualization
         const building5 = new BuildingI(this, true, {position: new CANNON.Vec3(-9, 3.2, 1), rotation: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -45 * (Math.PI / 180))}, skyscraperMaterial, 5, 500, 100); // an example of size/loc visualization
         const building6 = new BuildingI(this, true, {position: new CANNON.Vec3(-9, 3.6, -2.5), rotation: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 90 * (Math.PI / 180))}, skyscraperMaterial, 6, 600, 100); // an example of size/loc visualization
         const building7 = new BuildingI(this, true, {position: new CANNON.Vec3(-7, 2.5, -4.5), rotation: new CANNON.Quaternion()}, skyscraperMaterial, 7, 700, 100); // an example of size/loc visualization
-        const building8 = new BuildingI(this, true, {position: new CANNON.Vec3(-1, 1, -7), rotation: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 45 * (Math.PI / 180))}, skyscraperMaterial, 8, 800, 100); // an example of size/loc visualization
+        const building8 = new BuildingI(this, true, {position: new CANNON.Vec3(-1, 1.1, -7), rotation: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 45 * (Math.PI / 180))}, skyscraperMaterial, 8, 800, 100); // an example of size/loc visualization
         const building9 = new BuildingI(this, true, {position: new CANNON.Vec3(4, 0.5, -7), rotation: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 90 * (Math.PI / 180))}, skyscraperMaterial, 9, 900, 100); // an example of size/loc visualization
         const building10 = new BuildingI(this, true, {position: new CANNON.Vec3(3, 0, 1), rotation: new CANNON.Quaternion()}, skyscraperMaterial, 10, 1000, 100); // an example of size/loc visualization
-        const building11 = new BuildingI(this, true, {position: new CANNON.Vec3(-2, 1, 0), rotation: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 90 * (Math.PI / 180))}, skyscraperMaterial, 11, 1100, 100); // an example of size/loc visualization
+        const building11 = new BuildingI(this, true, {position: new CANNON.Vec3(-2, 0.1, 0), rotation: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -90 * (Math.PI / 180))}, skyscraperMaterial, 11, 1100, 100); // an example of size/loc visualization
 
         this.add(land, player, lights, water, 
             building1, building2, building3, building4, building5, building6, building7, building8, building9, building10, building11);

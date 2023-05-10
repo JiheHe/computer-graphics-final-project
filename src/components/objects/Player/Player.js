@@ -39,7 +39,7 @@ class Player extends Group {
         this.state = {
             gui: parent.state.gui, // gui, useless at the moment. Can be used in the future for parameter tuning, or delete.
             moveSpeed: 5, // move speed of the player // force: 10
-            jumpHeight: 3, // jump height of the player // force: 500
+            jumpHeight: 2.5, // jump height of the player // force: 500
             isGrounded: false, // checks whether the character is on the ground.
             colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
         };
@@ -56,7 +56,7 @@ class Player extends Group {
         });
 
         // Variables for kinematic movement and QoL updates
-        this.targetRotation = 0;
+        this.targetRotation = 50; // also starting rotation
         this.keyReleased = false;
         this.lastDirection = '';
 
@@ -80,6 +80,7 @@ class Player extends Group {
             linearDamping: 0.1, // might be useless since kinematics now... // A factor that reduces the object's linear velocity over time, simulating friction or air resistence. 
             fixedRotation: true, // When true, disables forced rotation due to collision
             position: startingPos, // The starting position of the object in the physics world.
+            quaternion: new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -90 * (Math.PI / 180)),
             collisionFilterGroup: 0b00001,
             collisionFilterMask: -1,
         });
@@ -95,6 +96,7 @@ class Player extends Group {
 
         // Add body to the world (physics world)
         parent.state.world.addBody(this.body);
+        this.quaternion.copy(this.body.quaternion); // starting rotation
 
         // for debugging: visualizing collider
         /*this.colliderMesh = createCylinderColliderMesh(this.body);
