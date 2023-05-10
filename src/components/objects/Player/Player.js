@@ -39,7 +39,7 @@ class Player extends Group {
         this.state = {
             gui: parent.state.gui, // gui, useless at the moment. Can be used in the future for parameter tuning, or delete.
             moveSpeed: 5, // move speed of the player // force: 10
-            jumpHeight: 2, // jump height of the player // force: 500
+            jumpHeight: 3, // jump height of the player // force: 500
             isGrounded: false, // checks whether the character is on the ground.
             colliderOffset: new Vector3(0, 0, 0), // manually tuning the offset needed for mesh visualization to match the physical collider
         };
