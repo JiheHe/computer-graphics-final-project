@@ -171,7 +171,8 @@ class Land extends Group {
             // ### physical side of the rising sea level mesh ###
             // ##################################################
 
-            const shape = new CANNON.Box(new CANNON.Vec3((boundingBox.max.x - boundingBox.min.x) / 2, 0.25, (boundingBox.max.z - boundingBox.min.z) / 2));
+            let layerHeight = 0.1;
+            const shape = new CANNON.Box(new CANNON.Vec3((boundingBox.max.x - boundingBox.min.x) / 2, layerHeight, (boundingBox.max.z - boundingBox.min.z) / 2));
             const body = new CANNON.Body({  // invisible collider properties
                 mass: 0,  // static
                 shape: shape,
@@ -210,7 +211,7 @@ class Land extends Group {
             // scene.add(water);
 
             let width = (boundingBox.max.x - boundingBox.min.x) - 0.1;
-            this.startingHeight = 0.1;
+            this.startingHeight = layerHeight;
             let depth = (boundingBox.max.z - boundingBox.min.z) - 0.1
 
             let geometry = new BoxGeometry(width, this.startingHeight, depth);
@@ -220,19 +221,20 @@ class Land extends Group {
                 opacity: 0.8,
             });
 
-            const mesh = new Mesh(geometry, material); // creating the final mesh to display
+            // const mesh = new Mesh(geometry, material); // creating the final mesh to display
             let meshVolume = new Mesh(geometry, material);
 
             // ################################################
 
-            mesh.position.copy(body.position);
-            mesh.quaternion.copy(body.quaternion);
-            parent.add(mesh);
+            // mesh.position.copy(body.position);
+            // mesh.quaternion.copy(body.quaternion);
+            // parent.add(mesh);
             meshVolume.position.copy(body.position);
             meshVolume.quaternion.copy(body.quaternion);
             parent.add(meshVolume);
+            this.originalPosition = new Vector3().copy(body.position);
 
-            this.landRiser = {mesh, body, meshVolume};
+            this.landRiser = {body, meshVolume};
             
             // Add a collision event listener to the building's MAIN physics body
             // this.objectInContact = [];
@@ -384,15 +386,16 @@ class Land extends Group {
             
             // Update the position of landRiser.mesh and landRiser.body
             this.landRiser.body.position.y = newYPosition;
-            this.landRiser.mesh.position.y = newYPosition;
+            // this.landRiser.mesh.position.y = newYPosition;
             
             // Adjust the height of landRiser.meshVolume and reposition it
             // so its base stays at the same y position
             let volumeHeight = newYPosition - this.riserLandY.start;
-            this.landRiser.meshVolume.scale.y = volumeHeight / this.startingHeight; // the original height of the meshVolume
+            this.landRiser.meshVolume.scale.y = volumeHeight / this.startingHeight;
 
             // Reposition it so the base stays at the same y position
-            this.landRiser.meshVolume.position.y = this.riserLandY.start + volumeHeight / 2;
+            let offset = volumeHeight / 2 + this.startingHeight / 2;
+            this.landRiser.meshVolume.position.y = this.originalPosition.y + offset;
         }
 
         // Position and scale the grass blade instances randomly.
