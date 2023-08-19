@@ -1,9 +1,5 @@
 # CPSC 478/578 Final Project Starter
 
-This skeleton project will help you get started on your ThreeJS project and provide a strong foundation for extension. It sets up a simple scene, camera, and renderer in a modern JavaScript environment, and is written using some common best-practices that you may want to draw from.
-
-[Online Demo](https://reillybova.github.io/three-seed/)
-
 ## Installation
 To build this project, you will need to use GitHub's NodeJS Package Manager (npm) to manage and install project dependencies. All npm settings, as well as your project dependencies and their versionings, are defined in the file `package.json`. We will unpack this file in the next section.
 
@@ -60,15 +56,6 @@ As mentioned above, if you want to add additional libraries to your project, you
 Once you are happy with your project, try building a production bundle using `npm run build`. This will place an optimized and minified executable version of your project in the `./build/` directory. Test out this production build by setting `./build/` as your working directory and starting out a python server.
 
 Once you have a working production build and are ready for the site to go live, you can deploy your project straight to GitHub Pages via `npm run deploy`. Note that this requires that (1) your project is part of a repository, and (2) you have correctly set up your project's `package.json` file.
-
-## CC Attributes and Credits
-Both models were downloaded from the Google Poly project:
-
-* [Floating island](https://poly.google.com/view/eEz9hdknXOi)
-
-* [Flower](https://poly.google.com/view/eydI4__jXpi)
-
-This skeleton project was adapted from [edwinwebb's ThreeJS seed project](https://github.com/edwinwebb/three-seed]) by Reilly Bova ’20.
 
 ## License
 [MIT](./LICENSE)
