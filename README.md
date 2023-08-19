@@ -1,4 +1,4 @@
-# CPSC 478/578 Final Project Starter
+# CPSC 478/578 Final Project
 
 ## Installation
 To build this project, you will need to use GitHub's NodeJS Package Manager (npm) to manage and install project dependencies. All npm settings, as well as your project dependencies and their versionings, are defined in the file `package.json`. We will unpack this file in the next section.
